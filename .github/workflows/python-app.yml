@@ -50,7 +50,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ secrets.IMAGE_TAG }}
+          tags: registry.gitlab.com/jakub3628800/jakub-dockerfiles
     -
       name: Image digest
       run: echo ${{ steps.docker_build.outputs.digest }}
