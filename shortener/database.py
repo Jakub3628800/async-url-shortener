@@ -1,8 +1,6 @@
 from databases import Database
-from typing import Optional
-
 from pydantic import SecretStr
-postgres_connection: Optional[Database] = None
+
 
 def load_database_url() -> SecretStr:
     db_host = "localhost:5432"
@@ -10,13 +8,12 @@ def load_database_url() -> SecretStr:
     db_user = "localuser"
     db_password = SecretStr("password123")
 
-    db_url = f'postgresql://{db_user}:{db_password.get_secret_value()}@{db_host}/{db_name}'
+    db_url = f"postgresql://{db_user}:{db_password.get_secret_value()}@{db_host}/{db_name}"
     return SecretStr(db_url)
+
 
 database_url = load_database_url()
 postgres_connection = Database(database_url.get_secret_value())
-
-
 
 
 async def set_up_postgres_connection() -> None:
