@@ -1,7 +1,7 @@
 name: Publish Docker image
 on:
-  release:
-    types: [published]
+  push:
+    branches: [ master ]
 jobs:
   push_to_registry:
     name: Push Docker image to GitHub Packages
@@ -23,5 +23,5 @@ jobs:
         with:
           push: true
           tags: |
-            docker.pkg.github.com/${{ github.repository }}/octo-image:${{ github.sha }}
-            docker.pkg.github.com/${{ github.repository }}/octo-image:${{ github.ref }}
+            docker.pkg.github.com/url-shortener-starlette/octo-image:${{ github.sha }}
+            docker.pkg.github.com/url-shortener-starlette/octo-image:${{ github.ref }}
