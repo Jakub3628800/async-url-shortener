@@ -23,5 +23,5 @@ jobs:
         with:
           push: true
           tags: |
-            docker.pkg.github.com/url-shortener-starlette/octo-image:${{ github.sha }}
-            docker.pkg.github.com/url-shortener-starlette/octo-image:${{ github.ref }}
+            docker.pkg.github.com/Jakub3628800/url-shortener-starlette/octo-image:${{ github.sha }}
+            docker.pkg.github.com/Jakub3628800/url-shortener-starlette/octo-image:${{ github.ref }}
