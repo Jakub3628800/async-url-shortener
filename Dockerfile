@@ -1,9 +1,15 @@
-FROM python:3.8
+FROM ubuntu:focal
 
-WORKDIR /usr/src/app
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+
+WORKDIR src
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
 
 COPY . .
 
