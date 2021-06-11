@@ -1,7 +1,7 @@
+"""Endpoints for editing short_url: target mappings."""
 from starlette.responses import JSONResponse
 from starlette.routing import Route
-from shortener.database import postgres_connection
-from shortener.actions import get_url_target, create_url_target, update_url_target, delete_url_target, get_all
+from shortener.actions import get_url_target, create_url_target, update_url_target, delete_url_target
 
 
 async def get_url(request):
@@ -9,29 +9,39 @@ async def get_url(request):
     short_url = request.get("path_params", {}).get("short_url")
 
     target_url = await get_url_target(short_url)
-    all_urls = await get_all(short_url)
-    return JSONResponse(content={"short_url": short_url, "target_url": target_url})
+
+    return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)
 
 
 async def create_url(request):
     """Get room by a name."""
     body = await request.json()
     short_url = body.get("short_url")
-    target_url = body.get("target")
+    target_url = body.get("target_url")
 
-    resp = await create_url_target(short_url=short_url, target_url=target_url)
+    await create_url_target(short_url=short_url, target_url=target_url)
 
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=201)
 
 
 async def update_url(request):
     """Get room by a name."""
-    return JSONResponse({})
+    body = await request.json()
+    short_url = body.get("short_url")
+    target_url = body.get("target_url")
+
+    await update_url_target(short_url=short_url, new_target_url=target_url)
+
+    return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)
 
 
 async def delete_url(request):
     """Get room by a name."""
-    return JSONResponse({})
+    short_url = request.get("path_params", {}).get("short_url")
+
+    await delete_url_target(short_url)
+
+    return JSONResponse({}, status_code=204)
 
 
 routes = [
