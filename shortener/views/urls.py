@@ -8,7 +8,7 @@ async def get_url(request):
     """Get room by a name."""
     short_url = request.get("path_params", {}).get("short_url")
 
-    async with request.app.database.connection() as connection:
+    async with request.app.pool.acquire() as connection:
         target_url = await get_url_target(short_url, connection)
 
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)

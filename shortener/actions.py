@@ -9,8 +9,8 @@ class UrlNotFoundException(HTTPException):
 
 async def get_url_target(short_url: str, connection) -> str:
     try:
-        return await connection.fetch_val(
-            query="SELECT target from short_urls where url_key=:url_key;", values={"url_key": short_url}
+        return await connection.fetchval(
+            "SELECT target from short_urls where url_key=$1;", short_url
         )
     except Exception:
         raise UrlNotFoundException()

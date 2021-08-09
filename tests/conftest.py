@@ -1,13 +1,16 @@
 import pytest
 from starlette.testclient import TestClient
-from shortener.factory import app
+from shortener.factory import init_app
 from shortener.database import create_db_pool
+import asyncio
 import httpx
 
 
 @pytest.fixture(scope="function")
 def test_client():
-   return TestClient(app=app)
+    loop = asyncio.get_event_loop()
+    app = loop.run_until_complete(init_app())
+    return TestClient(app=app)
 
 @pytest.fixture()
 def psycopg2_cursor():

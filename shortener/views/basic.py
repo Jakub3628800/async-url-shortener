@@ -19,7 +19,7 @@ async def check_db_up(connection: asyncpg.Connection) -> bool:
 
 async def status(request):
     """Status request to check service has a connection to the database."""
-    async with request.app.database.connection() as connection:
+    async with request.app.pool.acquire() as connection:
         db_up_result = await check_db_up(connection)
 
     db_up = "true" if db_up_result else "false"
