@@ -1,6 +1,9 @@
 from starlette.routing import Mount, Route
 from shortener.actions import UrlNotFoundException
-from shortener.database import set_up_postgres_connection, tear_down_postgres_connection
+from shortener.database import create_db_pool, load_database_url, DatabaseConnector
+import asyncpg
+import asyncio
+import databases
 from shortener.views.basic import ping, status
 from shortener.views.urls import routes as url_routes
 from shortener.views.redirect import redirect_url
@@ -27,13 +30,16 @@ async def not_found(request, exc):
 
 exception_handlers = {HTTPException: server_error, UrlNotFoundException: not_found}
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware import Middleware
 
-def create_app():
-    """Create application object."""
-    return Starlette(
+
+
+app = Starlette(
         debug=True,
         routes=routes,
-        on_startup=[set_up_postgres_connection],
-        on_shutdown=[tear_down_postgres_connection],
+        on_startup=[],
+        on_shutdown=[],
         exception_handlers=exception_handlers,
     )
+app.database = DatabaseConnector()
