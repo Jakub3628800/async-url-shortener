@@ -1,6 +1,9 @@
 from databases import Database
 from pydantic import SecretStr
-
+from typing import Optional
+import asyncpg
+import asyncio
+from contextlib import asynccontextmanager
 
 def load_database_url() -> SecretStr:
     db_host = "localhost:5432"
@@ -12,16 +15,25 @@ def load_database_url() -> SecretStr:
     return SecretStr(db_url)
 
 
-database_url = load_database_url()
-postgres_connection = Database(database_url.get_secret_value())
+class DatabaseConnector:
+
+    pool: Optional[asyncpg.Pool] = None
+
+    async def init_pool(self):
+       self.pool = await asyncpg.create_pool(dsn=load_database_url().get_secret_value(), min_size=5, max_size=25, loop=asyncio.get_running_loop())
+
+    @asynccontextmanager
+    async def connection(self):
+        if self.pool is None:
+            await self.init_pool()
+        async with self.pool.acquire() as conn:
+            yield conn
+
+import asyncpg
+
+async def create_db_pool():
+    pool = asyncpg.create_pool(dsn=load_database_url().get_secret_value(), min_size=5, max_size=25)
+    return pool
 
 
-async def set_up_postgres_connection() -> None:
-    """Postgres database connection."""
-    await postgres_connection.connect()
 
-
-async def tear_down_postgres_connection():
-    global postgres_connection
-    await postgres_connection.disconnect()
-    postgres_connection = None

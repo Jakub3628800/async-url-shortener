@@ -8,7 +8,8 @@ async def get_url(request):
     """Get room by a name."""
     short_url = request.get("path_params", {}).get("short_url")
 
-    target_url = await get_url_target(short_url)
+    async with request.app.database.connection() as connection:
+        target_url = await get_url_target(short_url, connection)
 
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)
 
@@ -19,7 +20,8 @@ async def create_url(request):
     short_url = body.get("short_url")
     target_url = body.get("target_url")
 
-    await create_url_target(short_url=short_url, target_url=target_url)
+    async with request.app.database.connection() as connection:
+        await create_url_target(short_url=short_url, target_url=target_url, connection=connection)
 
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=201)
 
@@ -30,7 +32,8 @@ async def update_url(request):
     short_url = body.get("short_url")
     target_url = body.get("target_url")
 
-    await update_url_target(short_url=short_url, new_target_url=target_url)
+    async with request.app.database.connection() as connection:
+        await update_url_target(short_url=short_url, new_target_url=target_url, connection=connection)
 
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)
 
@@ -39,7 +42,8 @@ async def delete_url(request):
     """Get room by a name."""
     short_url = request.get("path_params", {}).get("short_url")
 
-    await delete_url_target(short_url)
+    async with request.app.database.connection() as connection:
+        await delete_url_target(short_url, connection)
 
     return JSONResponse({}, status_code=204)
 
