@@ -17,20 +17,23 @@ jobs:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: localuser
-          POSTGRES_PASSWORD: password123
-          POSTGRES_DB: urldatabase
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: postgres
 
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          # Maps tcp port 5432 on service container to the host
+          - 5432:5432
 
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.9
+    - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
@@ -42,4 +45,9 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
-
+      env:
+        DB_HOST: localhost
+        DB_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
+        DB_NAME: postgres
+        DB_USER: postgres
+        DB_PASS: pass
