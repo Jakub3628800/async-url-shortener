@@ -34,12 +34,16 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware import Middleware
 
 
-
-app = Starlette(
+async def init_app():
+    """Initialize the application server."""
+    app = Starlette(
         debug=True,
         routes=routes,
         on_startup=[],
         on_shutdown=[],
         exception_handlers=exception_handlers,
     )
-app.database = DatabaseConnector()
+
+    app.pool = await asyncpg.create_pool(dsn=load_database_url().get_secret_value(), min_size=5, max_size=25, loop=asyncio.get_running_loop())
+
+    return app
