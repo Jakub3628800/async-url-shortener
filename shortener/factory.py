@@ -1,9 +1,8 @@
 from starlette.routing import Mount, Route
 from shortener.actions import UrlNotFoundException
-from shortener.database import create_db_pool, load_database_url, DatabaseConnector
+from shortener.database import load_database_url
 import asyncpg
 import asyncio
-import databases
 from shortener.views.basic import ping, status
 from shortener.views.urls import routes as url_routes
 from shortener.views.redirect import redirect_url
@@ -30,9 +29,6 @@ async def not_found(request, exc):
 
 exception_handlers = {HTTPException: server_error, UrlNotFoundException: not_found}
 
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.middleware import Middleware
-
 
 async def init_app():
     """Initialize the application server."""
@@ -44,6 +40,8 @@ async def init_app():
         exception_handlers=exception_handlers,
     )
 
-    app.pool = await asyncpg.create_pool(dsn=load_database_url().get_secret_value(), min_size=5, max_size=25, loop=asyncio.get_running_loop())
+    app.pool = await asyncpg.create_pool(
+        dsn=load_database_url().get_secret_value(), min_size=5, max_size=25, loop=asyncio.get_running_loop()
+    )
 
     return app
