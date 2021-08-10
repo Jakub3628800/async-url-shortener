@@ -1,4 +1,5 @@
 from starlette.exceptions import HTTPException
+import asyncpg
 
 
 class UrlNotFoundException(HTTPException):
@@ -19,20 +20,16 @@ async def get_all_short_urls(connection):
 
 
 async def create_url_target(short_url: str, target_url: str, connection):
-    return await connection.execute(
-        query="INSERT INTO short_urls (url_key, target) VALUES (:url_key,:target);",
-        values={"url_key": short_url, "target": target_url},
-    )
+    try:
+        await connection.execute("INSERT INTO short_urls (url_key, target) VALUES ($1,$2);", short_url, target_url)
+    except asyncpg.exceptions.UniqueViolationError:
+        pass
+    return
 
 
 async def update_url_target(short_url: str, new_target_url: str, connection):
-    return await connection.fetch_one(
-        query="UPDATE short_urls SET target = :target WHERE short_url = :short_url;",
-        values={"url_key": short_url, "target": new_target_url},
-    )
+    return await connection.fetchval("UPDATE short_urls SET target = $1 WHERE url_key = $2;", new_target_url, short_url)
 
 
 async def delete_url_target(short_url: str, connection):
-    return await connection.fetch_one(
-        query="delete from short_urls where url_key=:url_key;", values={"url_key": short_url}
-    )
+    return await connection.fetchval("delete from short_urls where url_key=$1;", short_url)
