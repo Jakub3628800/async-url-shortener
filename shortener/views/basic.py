@@ -12,7 +12,7 @@ async def check_db_up(connection: asyncpg.Connection) -> bool:
     try:
         query_result = await connection.fetchval("SELECT 1;")
         return query_result == 1
-    except Exception as e:
+    except Exception:
         pass
     return False
 

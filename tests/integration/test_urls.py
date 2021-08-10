@@ -2,9 +2,10 @@ import pytest
 
 
 def add_short_url(short_url, target_url, connection):
-        connection.execute(
-            "INSERT INTO short_urls (url_key, target) VALUES (%(a)s, %(b)s) on conflict do nothing;", {"a": short_url, "b": target_url}
-        )
+    connection.execute(
+        "INSERT INTO short_urls (url_key, target) VALUES (%(a)s, %(b)s) on conflict do nothing;",
+        {"a": short_url, "b": target_url},
+    )
 
 
 short_urls = [
@@ -13,6 +14,7 @@ short_urls = [
     ("test3", "test1_short"),
     ("test4", "test1_short"),
 ]
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("short_url,target", short_urls)
