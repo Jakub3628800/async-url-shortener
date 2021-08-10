@@ -5,7 +5,19 @@ from shortener.actions import get_url_target, create_url_target, update_url_targ
 
 
 async def get_url(request):
-    """Get room by a name."""
+    """
+    parameters:
+        - name: short_url
+          in: path
+          required: true
+          schema:
+            type : string
+    responses:
+      200:
+        description: Get short_url stored in database.
+        examples:
+          {"short_url": "testurl", "target_url": "https://wikipedia.com"}
+    """
     short_url = request.get("path_params", {}).get("short_url")
 
     async with request.app.pool.acquire() as connection:
@@ -15,7 +27,13 @@ async def get_url(request):
 
 
 async def create_url(request):
-    """Get room by a name."""
+    """
+    responses:
+      201:
+        description: Create short_url stored in database.
+        examples:
+          {"short_url": "testurl", "target_url": "https://wikipedia.com"}
+    """
     body = await request.json()
     short_url = body.get("short_url")
     target_url = body.get("target_url")
@@ -26,7 +44,13 @@ async def create_url(request):
 
 
 async def update_url(request):
-    """Get room by a name."""
+    """
+    responses:
+      200:
+        description: Update short_url stored in database.
+        examples:
+          {"short_url": "testurl", "target_url": "https://wikipedia.com"}
+    """
     body = await request.json()
     short_url = body.get("short_url")
     target_url = body.get("target_url")
@@ -38,7 +62,14 @@ async def update_url(request):
 
 
 async def delete_url(request):
-    """Get room by a name."""
+    """
+    responses:
+
+      204:
+
+        examples:
+          {}
+    """
     short_url = request.get("path_params", {}).get("short_url")
 
     async with request.app.pool.acquire() as connection:
