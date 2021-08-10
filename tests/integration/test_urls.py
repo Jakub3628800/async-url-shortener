@@ -18,6 +18,5 @@ short_urls = [
 @pytest.mark.parametrize("short_url,target", short_urls)
 def test_get_url(test_client, short_url, target, psycopg2_cursor):
     add_short_url(short_url, target, psycopg2_cursor)
-
     response = test_client.get("urls/sample_url")
     assert response.status_code == 200

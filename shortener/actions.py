@@ -12,7 +12,7 @@ async def get_url_target(short_url: str, connection) -> str:
         return await connection.fetchval(
             "SELECT target from short_urls where url_key=$1;", short_url
         )
-    except Exception:
+    except Exception as e:
         raise UrlNotFoundException()
 
 
