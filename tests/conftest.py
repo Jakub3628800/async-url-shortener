@@ -1,15 +1,19 @@
 import pytest
 import os
 from starlette.testclient import TestClient
-from shortener.factory import init_app
-import asyncio
+from shortener.factory import app
+import asyncpg
+from shortener.database import load_database_url
 
 
+@pytest.mark.asyncio
 @pytest.fixture(scope="function")
-def test_client():
-    loop = asyncio.get_event_loop()
-    app = loop.run_until_complete(init_app())
-    return TestClient(app=app)
+async def test_client():
+    async with asyncpg.create_pool(dsn=load_database_url().get_secret_value(), min_size=5, max_size=25) as pool:
+        app.pool = pool
+        yield TestClient(app=app)
+
+    return
 
 
 @pytest.fixture(scope="session")
