@@ -5,17 +5,22 @@ import asyncpg
 from shortener.views.basic import ping, status
 from shortener.views.urls import routes as url_routes
 from shortener.views.redirect import redirect_url
-
 import typing
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.exceptions import HTTPException
+from starlette.staticfiles import StaticFiles
+from shortener.views.swagger import openapi_schema, swaggerui
+
 
 routes = [
     Route("/ping", ping),
     Route("/status", status),
+    Route("/_schema", endpoint=openapi_schema, include_in_schema=False),
+    Route("/_swaggerui", endpoint=swaggerui),
     Route("/{short_url:str}", redirect_url),
     Mount("/urls", routes=url_routes),
+    Mount("/static", StaticFiles(directory="static"), name="static"),
 ]
 
 
