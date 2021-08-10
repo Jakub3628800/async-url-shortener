@@ -6,6 +6,7 @@ from shortener.actions import get_url_target, create_url_target, update_url_targ
 
 async def get_url(request):
     """
+    summary: Get a short_url and its target from the database.
     parameters:
         - name: short_url
           in: path
@@ -14,7 +15,6 @@ async def get_url(request):
             type : string
     responses:
       200:
-        description: Get short_url stored in database.
         examples:
           {"short_url": "testurl", "target_url": "https://wikipedia.com"}
     """
@@ -28,6 +28,20 @@ async def get_url(request):
 
 async def create_url(request):
     """
+    summary: Create a short_url in the database.
+    parameters:
+        - name: short_url
+          in: body
+          required: true
+          schema:
+            type : string
+
+        - name: target_url
+          in: body
+          required: true
+          schema:
+            type : string
+
     responses:
       201:
         description: Create short_url stored in database.
@@ -45,6 +59,19 @@ async def create_url(request):
 
 async def update_url(request):
     """
+    summary: Update a short_url in the database.
+    parameters:
+        - name: short_url
+          in: body
+          required: true
+          schema:
+            type : string
+
+        - name: target_url
+          in: body
+          required: true
+          schema:
+            type : string
     responses:
       200:
         description: Update short_url stored in database.
@@ -63,10 +90,9 @@ async def update_url(request):
 
 async def delete_url(request):
     """
+    summary: Delete a short_url from the database.
     responses:
-
       204:
-
         examples:
           {}
     """
