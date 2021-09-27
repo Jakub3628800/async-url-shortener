@@ -34,13 +34,17 @@ async def create_url(request):
           in: body
           required: true
           schema:
-            type : string
-
-        - name: target_url
-          in: body
-          required: true
-          schema:
-            type : string
+            type : object
+            required:
+                - short_url
+                - target_url
+            properties:
+                short_url:
+                    type: string
+                    example: wkp
+                target_url:
+                    type: string
+                    example: www.wikipedia.org
 
     responses:
       201:
