@@ -1,1 +1,0 @@
-uvicorn shortener.factory:app
