@@ -6,6 +6,9 @@ name: Linux_Container_Workflow
 jobs:
     build-and-deploy:
         runs-on: ubuntu-latest
+        environment:
+          name: production
+          url: ${{ steps.create_release.outputs.html_url }}
         steps:
         # checkout the repo
         - name: 'Checkout GitHub Action'
