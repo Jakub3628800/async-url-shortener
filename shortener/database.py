@@ -11,5 +11,9 @@ def load_database_url() -> SecretStr:
     db_user = os.getenv("DB_USER", "localuser")
     db_password = SecretStr(os.getenv("DB_PASS", "password123"))
 
+    db_url = os.getenv("DATABASE_URL", None)
+    if db_url:
+        return SecretStr(db_url)
+
     db_url = f"postgresql://{db_user}:{db_password.get_secret_value()}@{db_hostname}/{db_name}"
     return SecretStr(db_url)
