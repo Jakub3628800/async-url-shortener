@@ -20,8 +20,10 @@ jobs:
           uses: 'azure/aci-deploy@v1'
           with:
             resource-group: ${{ secrets.RESOURCE_GROUP }}
-            dns-name-label: ${{ secrets.RESOURCE_GROUP }}${{ github.run_number }}
             image: ${{ secrets.DOCKER_IMAGE }}
             name: shortener
+            dns-name-label: shortener
             location: 'westeurope'
             memory: 0.5
+            environment-variables: APPLICATION_PORT=80 DB_NAME=shortenerdb DB_PORT=5432 DB_USER=shortenerdb@shortenerdb
+            secure-environment-variables: DB_HOST=${{ secrets.DB_HOST }} DB_PASS=${{ secrets.DB_PASS }}
