@@ -17,6 +17,7 @@ async def redirect_url(request):
     """
     short_url = request.get("path_params", {}).get("short_url")
 
-    target_url = await get_url_target(short_url)
+    async with request.app.pool.acquire() as connection:
+        target_url = await get_url_target(short_url, connection)
 
     return RedirectResponse(url=target_url)

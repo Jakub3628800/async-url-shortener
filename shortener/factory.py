@@ -17,7 +17,7 @@ routes = [
     Route("/ping", ping),
     Route("/status", status),
     Route("/_schema", endpoint=openapi_schema, include_in_schema=False),
-    Route("/_swaggerui", endpoint=swaggerui),
+    Route("/", endpoint=swaggerui),
     Route("/{short_url:str}", redirect_url),
     Mount("/urls", routes=url_routes),
     Mount("/static", StaticFiles(directory="static"), name="static"),
