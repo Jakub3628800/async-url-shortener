@@ -1,6 +1,7 @@
 from starlette.routing import Mount, Route
 from shortener.actions import UrlNotFoundException
-from shortener.database import load_database_url
+import os
+from pydantic import SecretStr
 import asyncpg
 from shortener.views.basic import ping, status
 from shortener.views.urls import routes as url_routes
@@ -36,7 +37,25 @@ exception_handlers = {HTTPException: server_error, UrlNotFoundException: not_fou
 
 
 async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
-    async with asyncpg.create_pool(dsn=load_database_url().get_secret_value(), min_size=5, max_size=25) as pool:
+
+    db_port = os.getenv("DB_PORT", 5432)
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_name = os.getenv("DB_NAME", "postgres")
+    db_user = os.getenv("DB_USER", "localuser")
+    db_password = SecretStr(os.getenv("DB_PASS", "password123"))
+    db_ssl = os.getenv("DB_SSL", True)
+
+    async_pool = asyncpg.create_pool(
+        host=db_host,
+        port=db_port,
+        user=db_user,
+        password=db_password.get_secret_value(),
+        database=db_name,
+        ssl=db_ssl,
+        min_size=5,
+        max_size=25,
+    )
+    async with async_pool as pool:
         app.pool = pool
         yield
 
