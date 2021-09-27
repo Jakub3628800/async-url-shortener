@@ -1,1 +1,1 @@
-python run_app.py
+uvicorn shortener.factory:app
