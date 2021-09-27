@@ -37,7 +37,6 @@ exception_handlers = {HTTPException: server_error, UrlNotFoundException: not_fou
 
 
 async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
-
     db_port = os.getenv("DB_PORT", 5432)
     db_host = os.getenv("DB_HOST", "localhost")
     db_name = os.getenv("DB_NAME", "postgres")
