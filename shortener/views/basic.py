@@ -1,8 +1,9 @@
 from starlette.responses import JSONResponse
-import asyncpg
+from shortener.actions import check_db_up
+from starlette.requests import Request
 
 
-async def ping(request):
+async def ping(request: Request):
     """
     summary: Ping Pong
     responses:
@@ -13,17 +14,7 @@ async def ping(request):
     return JSONResponse({"ping": "pong"})
 
 
-async def check_db_up(connection: asyncpg.Connection) -> bool:
-    """Check connectivity to the database."""
-    try:
-        query_result = await connection.fetchval("SELECT 1;")
-        return query_result == 1
-    except Exception:
-        pass
-    return False
-
-
-async def status(request):
+async def status(request: Request):
     """
     summary: Status request to check service has a connection to the database.
     responses:

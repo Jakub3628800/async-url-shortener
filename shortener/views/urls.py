@@ -2,9 +2,10 @@
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 from shortener.actions import get_url_target, create_url_target, update_url_target, delete_url_target
+from starlette.requests import Request
 
 
-async def get_url(request):
+async def get_url(request: Request):
     """
     summary: Get a short_url and its target from the database.
     parameters:
@@ -26,7 +27,7 @@ async def get_url(request):
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)
 
 
-async def create_url(request):
+async def create_url(request: Request):
     """
     summary: Create a short_url in the database.
     parameters:
@@ -61,7 +62,7 @@ async def create_url(request):
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=201)
 
 
-async def update_url(request):
+async def update_url(request: Request):
     """
     summary: Update a short_url in the database.
     parameters:
@@ -92,7 +93,7 @@ async def update_url(request):
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)
 
 
-async def delete_url(request):
+async def delete_url(request: Request):
     """
     summary: Delete a short_url from the database.
     responses:

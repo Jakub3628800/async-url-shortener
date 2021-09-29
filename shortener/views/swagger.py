@@ -1,17 +1,15 @@
 from starlette.schemas import SchemaGenerator
 from starlette.templating import Jinja2Templates
 import json
+from starlette.requests import Request
 
 
-schemas = SchemaGenerator({"openapi": "3.0.0", "info": {"title": "Starlette URL shortener", "version": "1.0"}})
-templates = Jinja2Templates(directory="templates")
-
-
-def openapi_schema(request):
+def openapi_schema(request: Request):
+    schemas = SchemaGenerator({"openapi": "3.0.0", "info": {"title": "Starlette URL shortener", "version": "1.0"}})
     return schemas.OpenAPIResponse(request=request)
 
 
-async def swaggerui(request):
+async def swaggerui(request: Request):
 
     config = {
         "app_name": "Starlette URL shortener",
@@ -29,4 +27,6 @@ async def swaggerui(request):
         "config_json": json.dumps(config),
         "request": request,
     }
+
+    templates = Jinja2Templates(directory="templates")
     return templates.TemplateResponse("index.html", fields)

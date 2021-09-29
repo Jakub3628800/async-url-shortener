@@ -1,13 +1,17 @@
-from pydantic import BaseSettings, SecretStr
+from pydantic import BaseSettings
 
 
-class Settings(BaseSettings):
-    debug: bool = False
+class PostgresSettings(BaseSettings):
+    """Settings for postgres connection."""
 
-    postgres_user: str = "localuser"
-    postgres_password: SecretStr = SecretStr("password123")
-    postgres_db: str = "urldatabase"
+    host: str = "localhost"
+    port: int = 5432
+    database: str = "postgres"
+    user: str = "localuser"
+    password: str = "password123"
+    ssl: bool = False
 
-
-def get_settings():
-    return Settings()
+    class Config:
+        env_prefix = "DB_"
+        env_file = ".env"
+        env_file_encoding = "utf-8"
