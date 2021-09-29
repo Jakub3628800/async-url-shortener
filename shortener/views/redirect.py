@@ -1,8 +1,9 @@
 from starlette.responses import RedirectResponse
 from shortener.actions import get_url_target
+from starlette.requests import Request
 
 
-async def redirect_url(request):
+async def redirect_url(request: Request):
     """
     summary: Redirect request to a target url.
     parameters:

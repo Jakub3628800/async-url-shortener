@@ -8,6 +8,16 @@ class UrlNotFoundException(HTTPException):
         super().__init__(*args, **kwargs)
 
 
+async def check_db_up(connection: asyncpg.Connection) -> bool:
+    """Check connectivity to the database."""
+    try:
+        query_result = await connection.fetchval("SELECT 1;")
+        return query_result == 1
+    except Exception:
+        pass
+    return False
+
+
 async def get_url_target(short_url: str, connection: asyncpg.Connection) -> str:
     try:
         return await connection.fetchval("SELECT target from short_urls where url_key=$1;", short_url)
