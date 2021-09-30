@@ -53,6 +53,6 @@ jobs:
       env:
         DB_HOST: localhost
         DB_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
-        DB_NAME: postgres
+        DB_DATABASE: postgres
         DB_USER: postgres
-        DB_PASS: pass
+        DB_PASSWORD: pass
