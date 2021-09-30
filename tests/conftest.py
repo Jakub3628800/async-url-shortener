@@ -3,13 +3,16 @@ import os
 from starlette.testclient import TestClient
 from shortener.factory import app
 import asyncpg
-from shortener.database import load_database_url
+from shortener.settings import PostgresSettings
+
+import psycopg2
 
 
 @pytest.mark.asyncio
 @pytest.fixture(scope="function")
 async def test_client():
-    async with asyncpg.create_pool(dsn=load_database_url().get_secret_value(), min_size=5, max_size=25) as pool:
+    async_pool = asyncpg.create_pool(min_size=5, max_size=25, **dict(PostgresSettings(_env_file=None)))
+    async with async_pool as pool:
         app.pool = pool
         yield TestClient(app=app)
 
@@ -18,7 +21,6 @@ async def test_client():
 
 @pytest.fixture(scope="session")
 def psycopg2_cursor():
-    import psycopg2
 
     db_port = os.getenv("DB_PORT", 5432)
     db_host = os.getenv("DB_HOST", "localhost")
