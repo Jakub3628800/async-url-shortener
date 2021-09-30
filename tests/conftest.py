@@ -27,7 +27,7 @@ def psycopg2_cursor():
 
     db_name = os.getenv("DB_NAME", "postgres")
     db_user = os.getenv("DB_USER", "localuser")
-    db_password = os.getenv("DB_PASS", "password123")
+    db_password = os.getenv("DB_PASSWORD", "password123")
     connection = psycopg2.connect(dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port)
 
     cur = connection.cursor()
