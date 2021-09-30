@@ -1,10 +1,10 @@
 import asyncio
 import asyncpg
-from shortener.database import load_database_url
+from shortener.settings import PostgresSettings
 
 
 async def run_migrations():
-    connection = await asyncpg.connect(load_database_url().get_secret_value())
+    connection = await asyncpg.connect(**dict(PostgresSettings()))
     migration_files = ["create_short_url_table.sql"]
     for filename in migration_files:
         with open(f"database_migrations/{filename}") as sql_file:
