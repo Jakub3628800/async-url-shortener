@@ -2,5 +2,5 @@
 
 #url-shortener-starlette
 
-Simple async url shortener written using Starlette framework. Mostly a toy project made to experiment with different 
-things such as GitHub actions or python async libraries. 
+Simple async url shortener written using Starlette framework. Mostly a toy project made to experiment with different
+things such as GitHub actions or python async libraries.

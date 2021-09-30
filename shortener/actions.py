@@ -1,5 +1,5 @@
-from starlette.exceptions import HTTPException
 import asyncpg
+from starlette.exceptions import HTTPException
 
 
 class UrlNotFoundException(HTTPException):

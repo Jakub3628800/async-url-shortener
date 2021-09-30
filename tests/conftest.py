@@ -1,11 +1,12 @@
-import pytest
 import os
-from starlette.testclient import TestClient
-from shortener.factory import app
-import asyncpg
-from shortener.settings import PostgresSettings
 
+import asyncpg
 import psycopg2
+import pytest
+from starlette.testclient import TestClient
+
+from shortener.factory import app
+from shortener.settings import PostgresSettings
 
 
 @pytest.mark.asyncio

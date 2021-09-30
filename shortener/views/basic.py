@@ -1,6 +1,7 @@
-from starlette.responses import JSONResponse
-from shortener.actions import check_db_up
 from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+from shortener.actions import check_db_up
 
 
 async def ping(request: Request):
