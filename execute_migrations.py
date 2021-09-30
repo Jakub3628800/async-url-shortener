@@ -1,5 +1,7 @@
 import asyncio
+
 import asyncpg
+
 from shortener.settings import PostgresSettings
 
 

@@ -1,17 +1,21 @@
-from starlette.routing import Mount, Route
-from shortener.actions import UrlNotFoundException
-
-from shortener.settings import PostgresSettings
-import asyncpg
-from shortener.views.basic import ping, status
-from shortener.views.urls import routes as url_routes
-from shortener.views.redirect import redirect_url
 import typing
+
+import asyncpg
 from starlette.applications import Starlette
-from starlette.responses import JSONResponse
 from starlette.exceptions import HTTPException
+from starlette.responses import JSONResponse
+from starlette.routing import Mount
+from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
-from shortener.views.swagger import openapi_schema, swaggerui
+
+from shortener.actions import UrlNotFoundException
+from shortener.settings import PostgresSettings
+from shortener.views.basic import ping
+from shortener.views.basic import status
+from shortener.views.redirect import redirect_url
+from shortener.views.swagger import openapi_schema
+from shortener.views.swagger import swaggerui
+from shortener.views.urls import routes as url_routes
 
 
 routes = [

@@ -1,6 +1,7 @@
-from starlette.responses import RedirectResponse
-from shortener.actions import get_url_target
 from starlette.requests import Request
+from starlette.responses import RedirectResponse
+
+from shortener.actions import get_url_target
 
 
 async def redirect_url(request: Request):

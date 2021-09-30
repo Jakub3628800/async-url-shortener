@@ -1,6 +1,8 @@
-import uvicorn
-from shortener.factory import app
 import os
+
+import uvicorn
+
+from shortener.factory import app
 
 if __name__ == "__main__":
     port = os.getenv("APPLICATION_PORT", 8000)

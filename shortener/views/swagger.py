@@ -1,7 +1,8 @@
+import json
+
+from starlette.requests import Request
 from starlette.schemas import SchemaGenerator
 from starlette.templating import Jinja2Templates
-import json
-from starlette.requests import Request
 
 
 def openapi_schema(request: Request):
