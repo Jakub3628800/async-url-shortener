@@ -15,5 +15,7 @@ jobs:
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         test: true
+        labels:
+        checks_enabled: true
         method: rebase
         delete_source_branch: true
