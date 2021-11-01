@@ -2,8 +2,6 @@ name: Merge Bot
 
 on:
   pull_request:
-    types:
-      - ready_for_review
 
 jobs:
   merge:
@@ -15,5 +13,8 @@ jobs:
       with:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         test: true
+        reviewers: false
+        labels: false
+        checks_enabled: true
         method: rebase
         delete_source_branch: true
