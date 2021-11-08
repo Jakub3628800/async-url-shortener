@@ -2,9 +2,7 @@ on:
   release:
     types: [published, created, edited]
 
-  push:
-    branches: [ master ]
-name: Linux_Container_Workflow
+name: Deploy to Azure workflow
 
 jobs:
     build-and-deploy:
