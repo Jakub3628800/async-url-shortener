@@ -56,3 +56,14 @@ jobs:
         DB_DATABASE: postgres
         DB_USER: postgres
         DB_PASSWORD: pass
+
+    - name: Upload pytest coverage
+      run: |
+        pytest --cov=shortener | grep TOTAL | xargs -n 1 | tail -n 1 | xargs python upload_test_coverage.py
+      env:
+        DB_HOST: localhost
+        DB_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
+        DB_DATABASE: postgres
+        DB_USER: postgres
+        DB_PASSWORD: pass
+        GITHUB_TOKEN: ${{ secrets.GH_GIST_KEY }}

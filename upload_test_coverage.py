@@ -20,7 +20,7 @@ def upload_coverage_badge():
             "Accept": "application/vnd.github.v3+json",
         },
     )
-    print(r.status_code())
+    print(r.status_code)
 
 
 if __name__ == "__main__":
