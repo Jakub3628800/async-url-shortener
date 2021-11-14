@@ -1,6 +1,8 @@
 [![Python application](https://github.com/Jakub3628800/url-shortener-starlette/actions/workflows/python-app.yml/badge.svg?branch=master)](https://github.com/Jakub3628800/url-shortener-starlette/actions/workflows/python-app.yml)
 
-![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Jakub3628800/url-shortener-starlette/master.svg)](https://results.pre-commit.ci/latest/github/Jakub3628800/url-shortener-starlette/master)
+![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Jakub3628800/url-shortener-starlette/master.svg)
+
+![coverage](https://gist.githubusercontent.com/Jakub3628800/5163dbd0fdea4409fd7a3ae6383c6b66/raw/gistfile1.svg)
 
 #url-shortener-starlette
 

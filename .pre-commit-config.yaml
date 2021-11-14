@@ -20,6 +20,7 @@ repos:
     rev: v0.910-1
     hooks:
     -   id: mypy
+        exclude: "upload_test_coverage.py"
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
