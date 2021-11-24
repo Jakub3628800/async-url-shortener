@@ -1,4 +1,4 @@
-name: '' #set whatevername you want to your github job
+name: 'Deploy Heroku' #set whatevername you want to your github job
 on:
   workflow_dispatch:
 
