@@ -1,3 +1,4 @@
+import os
 import typing
 
 import asyncpg
@@ -41,10 +42,12 @@ exception_handlers = {HTTPException: server_error, UrlNotFoundException: not_fou
 
 
 async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
-    a = dict(PostgresSettings())
-    a["ssl"] = "require"
 
-    async_pool = asyncpg.create_pool(min_size=5, max_size=25, **a)
+    settings = dict(PostgresSettings())
+    if os.getenv("ENV") == "HEROKU":
+        settings["ssl"] = "require"
+
+    async_pool = asyncpg.create_pool(min_size=5, max_size=25, **settings)
     async with async_pool as pool:
         app.pool = pool
         yield
