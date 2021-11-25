@@ -41,7 +41,10 @@ exception_handlers = {HTTPException: server_error, UrlNotFoundException: not_fou
 
 
 async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
-    async_pool = asyncpg.create_pool(min_size=5, max_size=25, **dict(PostgresSettings()))
+    a = dict(PostgresSettings())
+    a["ssl"] = "require"
+
+    async_pool = asyncpg.create_pool(min_size=5, max_size=25, **a)
     async with async_pool as pool:
         app.pool = pool
         yield
