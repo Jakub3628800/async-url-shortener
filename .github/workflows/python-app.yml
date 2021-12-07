@@ -11,12 +11,13 @@ on:
 env:
   HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
   APP_NAME: url-shortener-starlette
+  IMAGE_NAME: shortener
 
 jobs:
 
   pytest_with_coverage:
     # Run pytest, upload coverage to a githubs gist so that badge can display it
-    
+
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -60,7 +61,7 @@ jobs:
 
   publishdocker:
     # Publish Docker image to GitHubs docker repository
-    
+
     runs-on: ubuntu-latest
     permissions:
       packages: write
