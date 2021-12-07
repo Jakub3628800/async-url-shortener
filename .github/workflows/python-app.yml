@@ -49,8 +49,8 @@ jobs:
         if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
     - name: Test with pytest
       run: |
-        pytest
-        pytest --cov=shortener | grep TOTAL | xargs -n 1 | tail -n 1 | xargs python upload_test_coverage.py
+        pytest --cov=shortener | tee coveragefile
+        cat coveragefile | grep TOTAL | xargs -n 1 | tail -n 1 | xargs python upload_test_coverage.py
       env:
         DB_HOST: localhost
         DB_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
