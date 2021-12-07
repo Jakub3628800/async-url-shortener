@@ -57,4 +57,5 @@ jobs:
         DB_DATABASE: postgres
         DB_USER: postgres
         DB_PASSWORD: pass
+        GITHUB_TOKEN: ${{ secrets.GH_GIST_KEY }}
 
