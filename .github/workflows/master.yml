@@ -1,4 +1,4 @@
-name: Python application
+name: Master Branch Workflow
 
 on:
   push:
