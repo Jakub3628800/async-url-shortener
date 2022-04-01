@@ -13,7 +13,7 @@ def openapi_schema(request: Request):
 async def swaggerui(request: Request):
 
     config = {
-        "app_name": "Starlette URL shortener",
+        "app_name": "Async URL shortener",
         "dom_id": "#swagger-ui",
         "url": "/_schema",
         "layout": "StandaloneLayout",
