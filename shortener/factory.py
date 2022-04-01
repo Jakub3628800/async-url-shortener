@@ -1,3 +1,4 @@
+import contextlib
 import os
 import typing
 
@@ -41,6 +42,7 @@ async def not_found(request, exc):
 exception_handlers = {HTTPException: server_error, UrlNotFoundException: not_found}
 
 
+@contextlib.asynccontextmanager
 async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
 
     settings = dict(PostgresSettings())
