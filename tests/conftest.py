@@ -15,7 +15,8 @@ async def test_client():
     async_pool = asyncpg.create_pool(min_size=5, max_size=25, **dict(PostgresSettings(_env_file=None)))
     async with async_pool as pool:
         app.pool = pool
-        yield TestClient(app=app)
+        with TestClient(app=app, backend_options={"use_uvloop": True}) as client:
+            yield client
 
     return
 
