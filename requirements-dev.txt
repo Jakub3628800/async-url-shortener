@@ -1,5 +1,4 @@
 -r requirements.txt
-httpx==0.21.1
 pre-commit==2.19.0
 psycopg2-binary==2.9.1
 pytest==7.1.2
