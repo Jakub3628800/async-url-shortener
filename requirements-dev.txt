@@ -3,6 +3,6 @@ pip-upgrader==1.4.15
 pre-commit==2.20.0
 psycopg2-binary==2.9.1
 pytest==7.1.2
-pytest-asyncio==0.16.0
+pytest-asyncio==0.19.0
 pytest-cov==3.0.0
 requests==2.28.1
