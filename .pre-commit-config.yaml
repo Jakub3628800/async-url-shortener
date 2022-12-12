@@ -20,6 +20,7 @@ repos:
     rev: v0.991
     hooks:
     -   id: mypy
+        args: [--explicit-package-bases, --namespace-packages]
         exclude: "upload_test_coverage.py"
 
 -   repo: https://github.com/pre-commit/pre-commit-hooks
