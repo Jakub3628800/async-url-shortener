@@ -1,6 +1,6 @@
 -r requirements.txt
 pip-upgrader==1.4.15
-pre-commit==2.21.0
+pre-commit==3.3.0
 psycopg2-binary==2.9.5
 pytest==7.2.1
 pytest-asyncio==0.20.3
