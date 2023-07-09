@@ -1,0 +1,12 @@
+aiofiles
+asyncpg
+gunicorn
+httptools
+httpx
+jinja2
+pydantic
+pydantic_settings
+pyyaml
+starlette
+uvicorn
+uvloop
