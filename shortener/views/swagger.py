@@ -13,7 +13,6 @@ def openapi_schema(request: Request):
 
 
 async def swaggerui(request: Request):
-
     config = {
         "app_name": APP_NAME,
         "dom_id": "#swagger-ui",
