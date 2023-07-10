@@ -23,7 +23,6 @@ async def test_client():
 
 @pytest.fixture(scope="session")
 def psycopg2_cursor():
-
     db_port = os.getenv("DB_PORT", 5432)
     db_host = os.getenv("DB_HOST", "localhost")
 
