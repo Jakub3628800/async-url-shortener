@@ -44,7 +44,6 @@ exception_handlers = {HTTPException: server_error, UrlNotFoundException: not_fou
 
 @contextlib.asynccontextmanager
 async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
-
     settings = dict(PostgresSettings())
     if os.getenv("ENV") == "HEROKU":
         settings["ssl"] = "require"
