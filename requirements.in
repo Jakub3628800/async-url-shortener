@@ -9,4 +9,11 @@ pydantic_settings
 pyyaml
 starlette
 uvicorn
+pre-commit
+requests
 uvloop
+pip-upgrader
+psycopg2-binary
+pytest
+pytest-asyncio
+pytest-cov
