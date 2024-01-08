@@ -1,0 +1,3 @@
+[tool.pip-compile]
+generate_hashes = true
+output-file = "requirements.txt"
