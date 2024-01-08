@@ -12,7 +12,6 @@ uvicorn
 pre-commit
 requests
 uvloop
-pip-upgrader
 psycopg2-binary
 pytest
 pytest-asyncio
