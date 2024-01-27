@@ -8,3 +8,5 @@
 - use alembic + sqlalchemy (or something else?) for migrations
 - add sqlite support
 - change pre-commit PR action to be custom and not use pre-commi ci
+- experiment with testcontainers
+- experiment with docker scout
