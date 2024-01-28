@@ -17,3 +17,6 @@ https://async-url-shortener.herokuapp.com/
 
 ## Artifacts
 docker: `ghcr.io/jakub3628800/shortener:latest`
+
+
+test
