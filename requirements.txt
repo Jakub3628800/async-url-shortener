@@ -78,11 +78,11 @@ pre-commit==3.6.0
     # via -r requirements.in
 psycopg2-binary==2.9.9
     # via -r requirements.in
-pydantic==2.5.3
+pydantic==2.6.0
     # via
     #   -r requirements.in
     #   pydantic-settings
-pydantic-core==2.14.6
+pydantic-core==2.16.1
     # via pydantic
 pydantic-settings==2.1.0
     # via -r requirements.in
