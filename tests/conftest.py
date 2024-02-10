@@ -5,6 +5,7 @@ import psycopg2
 import pytest
 from starlette.testclient import TestClient
 
+from testcontainers.compose import DockerCompose
 from shortener.factory import app
 from shortener.settings import PostgresSettings
 
@@ -22,7 +23,26 @@ async def test_client():
 
 
 @pytest.fixture(scope="session")
+def docker_compose_test_containers():
+    compose = DockerCompose("", compose_file_name="docker-compose.yaml", pull=True)
+
+    with compose:
+        stdout, stderr = compose.get_logs()
+        print(stdout)
+
+
+@pytest.fixture(scope="session")
 def psycopg2_cursor():
+    compose = DockerCompose(".", compose_file_name="docker-compose.yaml", pull=True)
+
+    with compose:
+        stdout, stderr = compose.get_logs()
+        print(stdout)
+
+    import time
+
+    time.sleep(20)
+
     db_port = os.getenv("DB_PORT", 5432)
     db_host = os.getenv("DB_HOST", "localhost")
 

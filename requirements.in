@@ -12,7 +12,9 @@ uvicorn
 pre-commit
 requests
 uvloop
+testcontainers
 psycopg2-binary
 pytest
 pytest-asyncio
 pytest-cov
+pip-tools
