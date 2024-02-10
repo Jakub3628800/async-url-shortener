@@ -8,7 +8,7 @@ things such as GitHub actions or python async libraries.
 ![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Jakub3628800/async-url-shortener/master.svg)
 ![coverage](https://gist.githubusercontent.com/Jakub3628800/5163dbd0fdea4409fd7a3ae6383c6b66/raw/gistfile1.svg)
 
-It works: https://async-url-shortener.herokuapp.com/shipit
+It works: https://async-url-shortener.herokuapp.com/shipit # not anymore, heroku is expensive. Looking for a new deployment.
 
 ## Running
 1. Activate a virtual environment
@@ -25,8 +25,8 @@ It works: https://async-url-shortener.herokuapp.com/shipit
 `make upgrade`
 
 ## Environments
-The app is currently deployed in heroku.
-
+The app was currently deployed in heroku. I'm looking for a new deployment.
+(not working anymore)
 https://async-url-shortener.herokuapp.com/
 
 ## Artifacts
