@@ -10,6 +10,20 @@ things such as GitHub actions or python async libraries.
 
 It works: https://async-url-shortener.herokuapp.com/shipit
 
+## Running
+1. Activate a virtual environment
+2. Install pip-tools: `pip install pip-tools` (pip-tols is used to manage dependencies, you only need to install it once when bootstraping the virtualenv)
+3. Install dependencies: `make install`
+
+### Running the tests
+`make test`
+
+### Running the app
+`make run`
+
+### Upgrading dependencies
+`make upgrade`
+
 ## Environments
 The app is currently deployed in heroku.
 

@@ -5,12 +5,10 @@ import psycopg2
 import pytest
 from starlette.testclient import TestClient
 
-from testcontainers.compose import DockerCompose
 from shortener.factory import app
 from shortener.settings import PostgresSettings
 
 
-@pytest.mark.asyncio
 @pytest.fixture(scope="function")
 async def test_client():
     async_pool = asyncpg.create_pool(min_size=5, max_size=25, **dict(PostgresSettings(_env_file=None)))
@@ -22,26 +20,24 @@ async def test_client():
     return
 
 
-@pytest.fixture(scope="session")
-def docker_compose_test_containers():
-    compose = DockerCompose("", compose_file_name="docker-compose.yaml", pull=True)
-
-    with compose:
-        stdout, stderr = compose.get_logs()
-        print(stdout)
+# @pytest.fixture(scope="session")
+# def docker_compose_test_containers():
+#    compose = DockerCompose("", compose_file_name="docker-compose.yaml", pull=True)
+#    print("Starting docker compose")
+#    with compose:
+#        stdout, stderr = compose.get_logs()
+#        print(stdout)
 
 
 @pytest.fixture(scope="session")
 def psycopg2_cursor():
-    compose = DockerCompose(".", compose_file_name="docker-compose.yaml", pull=True)
-
-    with compose:
-        stdout, stderr = compose.get_logs()
-        print(stdout)
-
-    import time
-
-    time.sleep(20)
+    #    compose = DockerCompose(".", compose_file_name="docker-compose.yaml", pull=True)
+    #
+    #    with compose:
+    #        stdout, stderr = compose.get_logs()
+    #        print(stdout)
+    #
+    #    import time
 
     db_port = os.getenv("DB_PORT", 5432)
     db_host = os.getenv("DB_HOST", "localhost")
