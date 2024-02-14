@@ -15,7 +15,7 @@ install:
 	pip-sync
 
 upgrade:
-	pip-compile
+	pip-compile --upgrade
 	pip-sync
 
 run: docker-compose
