@@ -3,7 +3,10 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from shortener.actions import get_url_target, create_url_target, update_url_target, delete_url_target
+from shortener.actions import create_url_target
+from shortener.actions import delete_url_target
+from shortener.actions import get_url_target
+from shortener.actions import update_url_target
 
 
 async def get_url(request: Request):

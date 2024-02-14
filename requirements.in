@@ -16,6 +16,5 @@ pytest-cov
 pyyaml
 requests
 starlette
-testcontainers
-uvicorn
+uvicorn[standard]
 uvloop
