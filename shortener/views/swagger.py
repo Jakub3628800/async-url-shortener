@@ -8,7 +8,9 @@ APP_NAME = "Async URL shortener"
 
 
 def openapi_schema(request: Request):
-    schemas = SchemaGenerator({"openapi": "3.0.0", "info": {"title": APP_NAME, "version": "1.0"}})
+    schemas = SchemaGenerator(
+        {"openapi": "3.0.0", "info": {"title": APP_NAME, "version": "1.0"}}
+    )
     return schemas.OpenAPIResponse(request=request)
 
 
