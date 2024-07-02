@@ -12,7 +12,7 @@ repos:
     rev: v1.10.1
     hooks:
     -   id: mypy
-        args: [--explicit-package-bases, --namespace-packages]
+        args: [--explicit-package-bases, --namespace-packages, --ignore-missing-imports]
         exclude: "upload_test_coverage.py"
 
 -   repo: https://github.com/jazzband/pip-tools
