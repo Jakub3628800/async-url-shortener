@@ -30,3 +30,8 @@ repos:
     -   id: check-merge-conflict
     -   id: check-json
     -   id: check-executables-have-shebangs
+
+-   repo: https://github.com/rhysd/actionlint
+    rev: v1.6.27
+    hooks:
+        - id: actionlint
