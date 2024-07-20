@@ -6,9 +6,7 @@ things such as GitHub actions or python async libraries.
 
 [![Master workflow](https://github.com/Jakub3628800/async-url-shortener/actions/workflows/master.yml/badge.svg?branch=master)](https://github.com/Jakub3628800/async-url-shortener/actions/workflows/python-app.yml)
 ![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Jakub3628800/async-url-shortener/master.svg)
-![coverage](https://gist.githubusercontent.com/Jakub3628800/5163dbd0fdea4409fd7a3ae6383c6b66/raw/gistfile1.svg)
 
-It works: https://async-url-shortener.herokuapp.com/shipit # not anymore, heroku is expensive. Looking for a new deployment.
 
 ## Running
 1. Activate a virtual environment
