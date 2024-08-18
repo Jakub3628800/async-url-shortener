@@ -20,13 +20,17 @@ repos:
     hooks:
       - id: pip-compile
 
+
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
-    -   id: trailing-whitespace
-    -   id: check-added-large-files
-    -   id: end-of-file-fixer
-    -   id: check-yaml
-    -   id: check-merge-conflict
-    -   id: check-json
-    -   id: check-executables-have-shebangs
+        - id: check-yaml
+        - id: debug-statements
+        - id: check-ast
+        - id: check-executables-have-shebangs
+        - id: check-shebang-scripts-are-executable
+        - id: check-merge-conflict
+        - id: trailing-whitespace
+        - id: end-of-file-fixer
+        - id: fix-encoding-pragma
+          args: [--remove]
