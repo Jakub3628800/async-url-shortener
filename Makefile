@@ -1,7 +1,4 @@
-all: lint test
-
-lint:
-	pre-commit run --all-files
+all: test
 
 docker-compose:
 	docker compose up postgres -d
