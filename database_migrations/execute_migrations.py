@@ -1,3 +1,7 @@
+"""Script to execute migrations.
+
+This is done lazily because db for this project is just one simple table. Use alembic if you do anything that's more complicated than this.
+"""
 import asyncio
 
 import asyncpg
