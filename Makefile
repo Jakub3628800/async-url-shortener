@@ -18,3 +18,6 @@ upgrade:
 run: docker-compose
 	python run_app.py
 	docker compose down
+
+watch: docker-compose
+	find . -type f -name "*.py" | entr -p pytest
