@@ -35,7 +35,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: auto-update pre-commit hooks"
-          branch: Main  # Replace with your default branch
+          branch: master
 
       - name: Create Pull Request
         if: steps.changes.outputs.changed == 'true'
