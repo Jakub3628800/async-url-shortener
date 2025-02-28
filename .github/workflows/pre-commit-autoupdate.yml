@@ -34,8 +34,8 @@ jobs:
         if: steps.changes.outputs.changed == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: update pre-commit hooks"
-          branch: main  # Replace with your default branch
+          commit_message: "chore: auto-update pre-commit hooks"
+          branch: Main  # Replace with your default branch
 
       - name: Create Pull Request
         if: steps.changes.outputs.changed == 'true'
