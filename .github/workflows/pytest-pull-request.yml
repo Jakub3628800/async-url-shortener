@@ -4,6 +4,8 @@ name: Pytest Pull Request workflow
 on:
   pull_request:
     branches: [ master ]
+  push:
+    branches: [ master, test-gh-action ]
 
 #set environment variables
 env:
