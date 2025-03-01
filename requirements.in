@@ -18,3 +18,5 @@ requests
 starlette
 uvicorn[standard]
 uvloop
+sqlalchemy
+alembic
