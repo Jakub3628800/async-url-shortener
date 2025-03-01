@@ -16,3 +16,7 @@ class PostgresSettings(BaseSettings):
     user: str = "localuser"
     password: str = "password123"
     ssl: bool = False
+
+    @property
+    def postgres_dsn(self) -> str:
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
