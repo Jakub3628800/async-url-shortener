@@ -5,11 +5,10 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from alembic import context
+from alembic import context  # type: ignore[attr-defined]
 
 from shortener.settings import PostgresSettings
 from shortener.models import Base
-from shortener.models.url import ShortURL
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -58,14 +57,14 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode using async engine."""
-    
+
     def run_async_migrations(connection):
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
         )
-        
+
         with context.begin_transaction():
             context.run_migrations()
 
@@ -79,7 +78,7 @@ def run_migrations_online() -> None:
                 future=True,
             )
         )
-        
+
         async with connectable.connect() as connection:
             await connection.run_sync(run_async_migrations)
 

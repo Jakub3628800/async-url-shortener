@@ -34,6 +34,7 @@ repos:
           - asyncpg-stubs
           - starlette
           - uvicorn
+          - sqlalchemy
 
 -   repo: https://github.com/jazzband/pip-tools
     rev: 7.4.1
