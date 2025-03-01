@@ -8,7 +8,7 @@ Create Date: 2025-03-01 16:44:15.188979
 from typing import Sequence, Union
 
 import sqlalchemy as sa
-from alembic import op
+from alembic.operations import Operations as op  # type: ignore
 
 
 

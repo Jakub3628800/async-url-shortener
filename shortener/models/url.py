@@ -1,16 +1,9 @@
-from typing import TYPE_CHECKING
-
 from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.sql import func
-from sqlalchemy.ext.declarative import declarative_base
 
-Base = declarative_base()
-
-if TYPE_CHECKING:
-    from . import Base  # noqa: F401
 from ..models import Base
 
-class ShortUrl(Base):
+class ShortUrl(Base):  # type: ignore
     __tablename__ = 'short_urls'
 
     id = Column(Integer, primary_key=True)
