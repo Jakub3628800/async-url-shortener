@@ -71,9 +71,3 @@ make test
 The application is containerized and can be deployed using Docker. The latest image is available at:
 `ghcr.io/jakub3628800/shortener:latest`
 
-## Contributing
-
-Contributions are welcome! Please follow the standard GitHub workflow:
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
