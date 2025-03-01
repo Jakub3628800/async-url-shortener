@@ -6,6 +6,10 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:  # Optional: Allow manual triggering
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -30,19 +34,15 @@ jobs:
           git add .pre-commit-config.yaml
           git diff --staged --quiet || echo "changed=true" >> $GITHUB_OUTPUT
 
-      - name: Commit and push changes
-        if: steps.changes.outputs.changed == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "chore: auto-update pre-commit hooks"
-          branch: master
-
       - name: Create Pull Request
         if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
-          title: "chore: auto-update pre-commit hooks"
+          title: "chore: Pre-commit auto-update"
           body: "Automated update of pre-commit hooks"
-          labels: dependencies,automated
-          assignees: your-github-username  # Optional
-          reviewers: your-team-member      # Optional
+          branch: "pre-commit-autoupdate"
+          base: "master"
+          labels: dependencies,github_actions
+          sign-commits: true
+          assignees: Jakub3628800
+          reviewers: Jakub3628800
