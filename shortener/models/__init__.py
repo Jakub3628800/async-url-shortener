@@ -1,5 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
+from .url import ShortUrl
 
 Base = declarative_base()
 
-from .url import ShortUrl
+__all__ = ["Base", "ShortUrl"]

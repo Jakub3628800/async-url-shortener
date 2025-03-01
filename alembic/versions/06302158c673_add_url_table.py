@@ -2,13 +2,13 @@
 
 Revision ID: 06302158c673
 Revises: d6f2bb97ceff
-Create Date: 2025-03-01 16:44:15.188979
+Create Date: 2025-03-01 17:16:00.000000
 
 """
 from typing import Sequence, Union
 
-from alembic import op  # type: ignore[attr-defined]
 import sqlalchemy as sa
+from alembic import op
 
 
 # revision identifiers, used by Alembic.

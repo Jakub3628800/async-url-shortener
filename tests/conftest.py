@@ -4,15 +4,28 @@ import asyncpg
 import psycopg2
 import pytest
 from starlette.testclient import TestClient
+from alembic import command
+from alembic.config import Config
 
 from shortener.factory import app
-from shortener.settings import PostgresSettings
 
 
 @pytest.fixture(scope="function")
 async def test_client():
-    async_pool = asyncpg.create_pool(
-        min_size=5, max_size=25, **dict(PostgresSettings(_env_file=None))
+    db_port = os.getenv("DB_PORT", 5432)
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_name = os.getenv("DB_NAME", "test_db")
+    db_user = os.getenv("DB_USER", "localuser")
+    db_password = os.getenv("DB_PASSWORD", "password123")
+
+    async_pool = await asyncpg.create_pool(
+        min_size=5,
+        max_size=25,
+        user=db_user,
+        password=db_password,
+        host=db_host,
+        port=db_port,
+        database=db_name
     )
     async with async_pool as pool:
         app.pool = pool
@@ -44,22 +57,56 @@ def psycopg2_cursor():
     db_port = os.getenv("DB_PORT", 5432)
     db_host = os.getenv("DB_HOST", "localhost")
 
-    db_name = os.getenv("DB_NAME", "postgres")
+    db_name = os.getenv("DB_NAME", "test_db")
     db_user = os.getenv("DB_USER", "localuser")
     db_password = os.getenv("DB_PASSWORD", "password123")
+
+    # Create database connection for cleanup
+    connection = psycopg2.connect(
+        dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port
+    )
+
+    # Configure and run Alembic migrations
+
+    # Create new connection for migrations
+    alembic_connection = psycopg2.connect(
+        dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port
+    )
+
+    # Configure Alembic
+    alembic_cfg = Config()
+    alembic_cfg.set_main_option("script_location", "alembic")
+    alembic_cfg.set_main_option("sqlalchemy.url", f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
+
+    # Drop all tables if they exist
+    with alembic_connection.cursor() as cur:
+        cur.execute("DROP TABLE IF EXISTS alembic_version CASCADE")
+        cur.execute("DROP TABLE IF EXISTS short_urls CASCADE")
+    alembic_connection.commit()
+
+    # Create fresh database schema
+    print("Running Alembic migrations...")
+    command.upgrade(alembic_cfg, "head")
+    print("Migrations completed successfully")
+
+    # Verify tables exist
+    with alembic_connection.cursor() as cur:
+        cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'short_urls')")
+        if not cur.fetchone()[0]:
+            raise RuntimeError("Failed to create short_urls table")
+
+    # Close migration connection
+    alembic_connection.close()
+
+    # Create fresh connection for tests
     connection = psycopg2.connect(
         dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port
     )
 
     cur = connection.cursor()
     cur.execute("SELECT 1")
-
-    try:
-        with open("database_migrations/create_short_url_table.sql") as sql_file:
-            migration = "".join(sql_file.readlines())
-            cur.execute(query=migration)
-    except Exception:
-        pass
+    alembic_cfg = Config("alembic.ini")
+    command.upgrade(alembic_cfg, "head")
 
     connection.commit()
     yield cur
