@@ -22,7 +22,7 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: pass
-          POSTGRES_DB: postgres
+          POSTGRES_DB: urldatabase
 
         options: >-
           --health-cmd pg_isready
@@ -47,7 +47,7 @@ jobs:
       env:
         DB_HOST: localhost
         DB_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
-        DB_DATABASE: postgres
+        DB_DATABASE: urldatabase
         DB_USER: postgres
         DB_PASSWORD: pass
         GITHUB_TOKEN: ${{ secrets.GH_GIST_KEY }}
