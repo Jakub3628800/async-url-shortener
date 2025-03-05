@@ -97,13 +97,9 @@ async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
     if os.getenv("ENV") == "HEROKU" or db_settings.get("ssl"):
         db_settings["ssl"] = "require"
     
-    # Create connection pool with configurable size based on environment
-    min_size = int(os.getenv("DB_POOL_MIN_SIZE", "5"))
-    max_size = int(os.getenv("DB_POOL_MAX_SIZE", "25"))
-    
     try:
         logging.info("Initializing database connection pool")
-        async_pool = asyncpg.create_pool(min_size=min_size, max_size=max_size, **db_settings)
+        async_pool = asyncpg.create_pool(**db_settings)
         
         async with async_pool as pool:
             app.pool = pool
