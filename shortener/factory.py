@@ -88,33 +88,33 @@ async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
-    
+
     # Load settings
     db_settings = dict(PostgresSettings())
     app_settings = AppSettings()
-    
+
     # Configure SSL if needed
     if os.getenv("ENV") == "HEROKU" or db_settings.get("ssl"):
         db_settings["ssl"] = "require"
-    
+
     try:
         logging.info("Initializing database connection pool")
         async_pool = asyncpg.create_pool(**db_settings)
-        
+
         async with async_pool as pool:
             app.pool = pool
-            
+
             # Verify database connection
             if not await check_database(pool):
                 logging.error("Failed to connect to database")
             else:
                 logging.info("Database connection established")
-                
+
             # Store settings in app state
             app.settings = app_settings
-            
+
             yield
-            
+
         logging.info("Application shutdown, connection pool closed")
     except Exception as e:
         logging.error(f"Error during application startup: {str(e)}")

@@ -2,7 +2,6 @@
 
 import logging
 import re
-from typing import Dict, Optional, Union
 
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -22,41 +21,41 @@ from shortener.actions import (
 def validate_url(url: str, max_length: int = 2048) -> bool:
     """
     Validate that a URL is properly formatted.
-    
+
     Args:
         url: The URL to validate
         max_length: Maximum allowed length
-        
+
     Returns:
         True if URL is valid, False otherwise
     """
     if not url or len(url) > max_length:
         return False
-        
+
     # Basic URL validation regex
     url_pattern = re.compile(
         r'^(https?|ftp)://'  # scheme
         r'([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?'  # domain
         r'(/[^/\s]*)*$'  # path
     )
-    
+
     return bool(url_pattern.match(url))
 
 
 def validate_key(key: str, max_length: int = 50) -> bool:
     """
     Validate that a URL key is properly formatted.
-    
+
     Args:
         key: The URL key to validate
         max_length: Maximum allowed length
-        
+
     Returns:
         True if key is valid, False otherwise
     """
     if not key or len(key) > max_length:
         return False
-        
+
     # Only allow alphanumeric characters, hyphens and underscores
     key_pattern = re.compile(r'^[a-zA-Z0-9_-]+$')
     return bool(key_pattern.match(key))
@@ -97,8 +96,8 @@ async def get_url(request: Request):
                 detail:
                   type: string
     """
-    short_url = request.path_params.get("short_url")
-    
+    short_url = request.path_params.get("short_url", "")
+
     if not validate_key(short_url):
         raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
 
@@ -132,7 +131,7 @@ async def list_urls(request: Request):
     """
     async with request.app.pool.acquire() as connection:
         urls = await get_all_short_urls(connection)
-    
+
     return JSONResponse(content=urls, status_code=200)
 
 
@@ -198,36 +197,36 @@ async def create_url(request: Request):
     except Exception as e:
         logging.error(f"Invalid JSON in request: {str(e)}")
         raise UrlValidationError(detail="Invalid JSON in request body")
-    
+
     short_url = body.get("short_url")
     target_url = body.get("target_url")
-    
+
     # Validate inputs
     if not short_url:
         raise UrlValidationError(detail="short_url is required")
     if not target_url:
         raise UrlValidationError(detail="target_url is required")
-    
+
     # Check URL format
     if not validate_key(short_url):
         raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
     if not validate_url(target_url):
         raise UrlValidationError(detail=f"Invalid target URL format: {target_url}")
-    
+
     # Check URL length
     max_key_length = getattr(request.app.settings, "max_key_length", 50)
     max_url_length = getattr(request.app.settings, "max_url_length", 2048)
-    
+
     if len(short_url) > max_key_length:
         raise UrlValidationError(detail=f"URL key exceeds maximum length of {max_key_length}")
     if len(target_url) > max_url_length:
         raise UrlValidationError(detail=f"Target URL exceeds maximum length of {max_url_length}")
-    
+
     async with request.app.pool.acquire() as connection:
         success = await create_url_target(
             short_url=short_url, target_url=target_url, connection=connection
         )
-        
+
         if not success:
             return JSONResponse(
                 content={
@@ -301,27 +300,27 @@ async def update_url(request: Request):
                 detail:
                   type: string
     """
-    short_url = request.path_params.get("short_url")
-    
+    short_url = request.path_params.get("short_url", "")
+
     if not validate_key(short_url):
         raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
-    
+
     try:
         body = await request.json()
     except Exception as e:
         logging.error(f"Invalid JSON in request: {str(e)}")
         raise UrlValidationError(detail="Invalid JSON in request body")
-    
+
     target_url = body.get("target_url")
-    
+
     # Validate input
     if not target_url:
         raise UrlValidationError(detail="target_url is required")
-    
+
     # Check URL format
     if not validate_url(target_url):
         raise UrlValidationError(detail=f"Invalid target URL format: {target_url}")
-    
+
     # Check URL length
     max_url_length = getattr(request.app.settings, "max_url_length", 2048)
     if len(target_url) > max_url_length:
@@ -331,7 +330,7 @@ async def update_url(request: Request):
         success = await update_url_target(
             short_url=short_url, new_target_url=target_url, connection=connection
         )
-        
+
         if not success:
             raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
 
@@ -364,14 +363,14 @@ async def delete_url(request: Request):
                 detail:
                   type: string
     """
-    short_url = request.path_params.get("short_url")
-    
+    short_url = request.path_params.get("short_url", "")
+
     if not validate_key(short_url):
         raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
 
     async with request.app.pool.acquire() as connection:
         success = await delete_url_target(short_url, connection)
-        
+
         if not success:
             raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
 

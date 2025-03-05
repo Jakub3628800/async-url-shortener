@@ -1,6 +1,6 @@
 import asyncpg
 import logging
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List
 from starlette.exceptions import HTTPException
 
 
@@ -29,20 +29,20 @@ async def check_db_up(connection: asyncpg.Connection) -> bool:
 async def get_url_target(short_url: str, connection: asyncpg.Connection) -> str:
     """
     Get the target URL for a given short URL key.
-    
+
     Args:
         short_url: The short URL key to look up
         connection: Database connection
-        
+
     Returns:
         The target URL as a string
-        
+
     Raises:
         UrlNotFoundException: If the short URL doesn't exist
     """
     if not short_url:
         raise UrlValidationError(detail="Short URL cannot be empty")
-        
+
     try:
         target = await connection.fetchval(
             "SELECT target from short_urls where url_key=$1;", short_url
@@ -61,10 +61,10 @@ async def get_url_target(short_url: str, connection: asyncpg.Connection) -> str:
 async def get_all_short_urls(connection: asyncpg.Connection) -> List[Dict[str, str]]:
     """
     Get all short URLs and their targets.
-    
+
     Args:
         connection: Database connection
-        
+
     Returns:
         List of dictionaries containing short_url and target_url
     """
@@ -81,15 +81,15 @@ async def create_url_target(
 ) -> bool:
     """
     Create a new short URL mapping.
-    
+
     Args:
         short_url: The short URL key to create
         target_url: The target URL it should redirect to
         connection: Database connection
-        
+
     Returns:
         True if successful, False if URL already exists
-        
+
     Raises:
         HTTPException: For database errors
         UrlValidationError: For invalid input
@@ -98,7 +98,7 @@ async def create_url_target(
         raise UrlValidationError(detail="Short URL cannot be empty")
     if not target_url:
         raise UrlValidationError(detail="Target URL cannot be empty")
-    
+
     try:
         await connection.execute(
             "INSERT INTO short_urls (url_key, target) VALUES ($1,$2);",
@@ -118,15 +118,15 @@ async def update_url_target(
 ) -> bool:
     """
     Update an existing short URL mapping.
-    
+
     Args:
         short_url: The short URL key to update
         new_target_url: The new target URL
         connection: Database connection
-        
+
     Returns:
         True if URL was updated, False if URL doesn't exist
-        
+
     Raises:
         HTTPException: For database errors
         UrlValidationError: For invalid input
@@ -135,7 +135,7 @@ async def update_url_target(
         raise UrlValidationError(detail="Short URL cannot be empty")
     if not new_target_url:
         raise UrlValidationError(detail="Target URL cannot be empty")
-        
+
     try:
         result = await connection.execute(
             "UPDATE short_urls SET target = $1 WHERE url_key = $2;",
@@ -152,20 +152,20 @@ async def update_url_target(
 async def delete_url_target(short_url: str, connection: asyncpg.Connection) -> bool:
     """
     Delete a short URL mapping.
-    
+
     Args:
         short_url: The short URL key to delete
         connection: Database connection
-        
+
     Returns:
         True if URL was deleted, False if URL doesn't exist
-        
+
     Raises:
         HTTPException: For database errors
     """
     if not short_url:
         raise UrlValidationError(detail="Short URL cannot be empty")
-        
+
     try:
         result = await connection.execute(
             "DELETE FROM short_urls WHERE url_key=$1;", short_url

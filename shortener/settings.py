@@ -17,7 +17,7 @@ class PostgresSettings(BaseSettings):
     user: str = "localuser"
     password: str = "password123"
     ssl: bool = False
-    
+
     # Connection pool settings
     min_size: int = 5
     max_size: int = 25
@@ -41,15 +41,15 @@ class AppSettings(BaseSettings):
     title: str = "URL Shortener API"
     description: str = "API for creating and managing shortened URLs"
     version: str = "1.0.0"
-    
+
     # URL validation settings
     max_url_length: int = 2048
     max_key_length: int = 50
-    
+
     # Rate limiting (for future implementation)
     rate_limit_enabled: bool = False
     rate_limit_per_minute: int = 60
-    
+
     @property
     def environment(self) -> str:
         """Return the current environment."""
