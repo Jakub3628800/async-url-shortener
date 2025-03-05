@@ -70,4 +70,3 @@ make test
 
 The application is containerized and can be deployed using Docker. The latest image is available at:
 `ghcr.io/jakub3628800/shortener:latest`
-
