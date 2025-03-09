@@ -1,6 +1,7 @@
 import os
+from typing import Any, Generator
+from unittest.mock import AsyncMock, MagicMock
 
-import asyncpg
 import psycopg2
 import pytest
 from starlette.testclient import TestClient
@@ -8,60 +9,61 @@ from alembic import command
 from alembic.config import Config
 
 from shortener.factory import app
+from shortener.settings import AppSettings
 
 
 @pytest.fixture(scope="function")
-async def test_client(psycopg2_cursor):
-    db_port = os.getenv("DB_PORT", 5432)
-    db_host = os.getenv("DB_HOST", "localhost")
-    db_name = os.getenv("DB_NAME", "urldatabase")
-    db_user = os.getenv("DB_USER", "localuser")
-    db_password = os.getenv("DB_PASSWORD", "password123")
+def test_client(psycopg2_cursor: Any) -> TestClient:
+    """Create a test client with mocked database connections."""
+    # Create app settings
+    app_settings = AppSettings()
 
-    # Create connection pool for the application
-    async_pool = await asyncpg.create_pool(
-        min_size=5,
-        max_size=25,
-        user=db_user,
-        password=db_password,
-        host=db_host,
-        port=db_port,
-        database=db_name
-    )
+    # Create a mock pool
+    mock_pool = MagicMock()
+    mock_connection = AsyncMock()
 
-    # Verify that the short_urls table exists and create it if it doesn't
-    async with async_pool.acquire() as conn:
-        try:
-            # Check if table exists and create it if not
-            table_exists = await conn.fetchval(
-                "SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = 'short_urls')"
-            )
+    # Configure the mock connection to return appropriate values for different queries
+    async def mock_fetchval(query, *args):
+        if "SELECT 1" in query:
+            return 1
+        # For get_url_target, return a valid URL for any key
+        if "SELECT target from short_urls where url_key" in query:
+            return "https://example.com/mocked"
+        return None
 
-            if not table_exists:
-                print("Creating short_urls table through asyncpg")
-                await conn.execute("""
-                CREATE TABLE short_urls (
-                    id SERIAL PRIMARY KEY,
-                    url_key VARCHAR NOT NULL UNIQUE,
-                    target VARCHAR NOT NULL,
-                    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now() NOT NULL
-                )
-                """)
+    async def mock_fetch(query, *args):
+        if "SELECT url_key, target from short_urls" in query:
+            return [{"url_key": "test1", "target": "https://example.com"}]
+        return []
 
-            # Add initial test data
-            await conn.execute(
-                "INSERT INTO short_urls (url_key, target) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-                "test1_short", "https://example.com/test1"
-            )
-        except Exception as e:
-            print(f"Setup error: {e}")
+    async def mock_execute(query, *args):
+        if "DELETE FROM short_urls" in query:
+            return "DELETE 1"
+        if "UPDATE short_urls" in query:
+            return "UPDATE 1"
+        if "INSERT INTO short_urls" in query:
+            return "INSERT 0 1"
+        return "OK"
 
-    # Set the app's connection pool
-    app.pool = async_pool
-    with TestClient(app=app) as client:
-        yield client
+    # Set up the mock connection methods
+    mock_connection.fetchval.side_effect = mock_fetchval
+    mock_connection.fetch.side_effect = mock_fetch
+    mock_connection.execute.side_effect = mock_execute
 
-    # Don't close the pool to allow shared use with other tests
+    # Configure the mock pool to return the mock connection
+    async def mock_acquire():
+        return mock_connection
+
+    mock_pool.acquire.return_value.__aenter__.side_effect = mock_acquire
+
+    # Set up the app state
+    app.state.pool = mock_pool
+    app.state.settings = app_settings
+
+    # Create the test client
+    client = TestClient(app)
+
+    return client
 
 
 # @pytest.fixture(scope="session")
@@ -74,71 +76,84 @@ async def test_client(psycopg2_cursor):
 
 
 @pytest.fixture(scope="session")
-def psycopg2_cursor():
+def psycopg2_connection() -> Generator[psycopg2.extensions.connection, None, None]:
+    """Create a PostgreSQL connection for tests."""
+    # Get database connection parameters from environment variables
     db_port = os.getenv("DB_PORT", 5432)
     db_host = os.getenv("DB_HOST", "localhost")
     db_name = os.getenv("DB_NAME", "urldatabase")
     db_user = os.getenv("DB_USER", "localuser")
     db_password = os.getenv("DB_PASSWORD", "password123")
 
-    # Configure Alembic
-    alembic_cfg = Config("alembic.ini")
-    alembic_cfg.set_main_option("sqlalchemy.url", f"postgresql+asyncpg://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}")
+    # Create a connection
+    conn = psycopg2.connect(
+        host=db_host,
+        port=db_port,
+        dbname=db_name,
+        user=db_user,
+        password=db_password
+    )
+    conn.autocommit = True
 
-    # Create connection for migrations
-    alembic_connection = psycopg2.connect(
-        dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port
+    yield conn
+
+    # Close the connection
+    conn.close()
+
+
+@pytest.fixture(scope="function")
+def psycopg2_cursor(psycopg2_connection: psycopg2.extensions.connection, run_migrations: None) -> Generator[psycopg2.extensions.cursor, None, None]:
+    """Create a PostgreSQL cursor for tests."""
+    # Create a cursor
+    cursor = psycopg2_connection.cursor()
+
+    # Clear the short_urls table before each test
+    try:
+        cursor.execute("DELETE FROM short_urls")
+        psycopg2_connection.commit()
+    except psycopg2.errors.UndefinedTable:
+        # Table doesn't exist yet, that's fine for unit tests
+        pass
+
+    yield cursor
+
+    # Close the cursor
+    cursor.close()
+
+
+@pytest.fixture(scope="function")
+def alembic_config() -> Config:
+    """Get alembic config."""
+    config = Config("alembic.ini")
+    return config
+
+
+@pytest.fixture(scope="function")
+def run_migrations(alembic_config: Config) -> None:
+    """Run migrations to head."""
+    command.upgrade(alembic_config, "head")
+
+    # Get database connection parameters from environment variables
+    db_port = os.getenv("DB_PORT", 5432)
+    db_host = os.getenv("DB_HOST", "localhost")
+    db_name = os.getenv("DB_NAME", "urldatabase")
+    db_user = os.getenv("DB_USER", "localuser")
+    db_password = os.getenv("DB_PASSWORD", "password123")
+
+    # Create a connection for verification
+    verification_connection = psycopg2.connect(
+        dbname=db_name,
+        user=db_user,
+        password=db_password,
+        host=db_host,
+        port=db_port
     )
 
-    # Drop all tables if they exist to start clean
-    with alembic_connection.cursor() as cur:
-        cur.execute("DROP TABLE IF EXISTS alembic_version CASCADE")
-        cur.execute("DROP TABLE IF EXISTS short_urls CASCADE")
-    alembic_connection.commit()
-
-    try:
-        print("Running Alembic migrations...")
-        command.upgrade(alembic_cfg, "head")
-    except Exception as e:
-        print(f"Error running migrations: {e}")
-        # Create the table manually if it doesn't exist
-        with alembic_connection.cursor() as cur:
-            cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'short_urls')")
-            if not cur.fetchone()[0]:
-                print("Creating short_urls table manually")
-                cur.execute("""
-                CREATE TABLE short_urls (
-                    id SERIAL PRIMARY KEY,
-                    url_key VARCHAR NOT NULL UNIQUE,
-                    target VARCHAR NOT NULL,
-                    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT now() NOT NULL
-                )
-                """)
-                cur.execute("CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(32) PRIMARY KEY)")
-                cur.execute("INSERT INTO alembic_version VALUES ('d6f2bb97ceff')")
-                alembic_connection.commit()
-
-    print("Migrations completed successfully")
-
     # Verify tables exist
-    with alembic_connection.cursor() as cur:
+    with verification_connection.cursor() as cur:
         cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'short_urls')")
         if not cur.fetchone()[0]:
             raise RuntimeError("Failed to create short_urls table")
 
-    # Close migration connection
-    alembic_connection.close()
-
-    # Create persistent connection for tests
-    connection = psycopg2.connect(
-        dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port
-    )
-    connection.autocommit = False
-
-    cur = connection.cursor()
-    connection.commit()
-
-    yield cur
-
-    # Clean up after tests
-    connection.close()
+    # Close verification connection
+    verification_connection.close()

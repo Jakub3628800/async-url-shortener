@@ -1,17 +1,17 @@
 import asyncpg
 import logging
-from typing import Dict, List
+from typing import Dict, List, Any
 from starlette.exceptions import HTTPException
 
 
 class UrlNotFoundException(HTTPException):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["status_code"] = 404
         super().__init__(*args, **kwargs)
 
 
 class UrlValidationError(HTTPException):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["status_code"] = 400
         super().__init__(*args, **kwargs)
 
