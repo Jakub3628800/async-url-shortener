@@ -1,11 +1,12 @@
 import logging
+
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from shortener.actions import get_url_target
 
 
-async def redirect_url(request: Request):
+async def redirect_url(request: Request) -> RedirectResponse:
     """
     summary: Redirect request to a target url.
     parameters:
@@ -21,7 +22,7 @@ async def redirect_url(request: Request):
     short_url = request.get("path_params", {}).get("short_url")
 
     try:
-        async with request.app.pool.acquire() as connection:
+        async with request.app.state.pool.acquire() as connection:
             target_url = await get_url_target(short_url, connection)
 
         # If valid URL was found, redirect to it

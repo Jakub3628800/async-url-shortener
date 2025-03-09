@@ -4,7 +4,7 @@ from starlette.responses import JSONResponse
 from shortener.actions import check_db_up
 
 
-async def ping(request: Request):
+async def ping(request: Request) -> JSONResponse:
     """
     summary: Ping Pong
     responses:
@@ -15,7 +15,7 @@ async def ping(request: Request):
     return JSONResponse({"ping": "pong"})
 
 
-async def status(request: Request):
+async def status(request: Request) -> JSONResponse:
     """
     summary: Status request to check service has a connection to the database.
     responses:
@@ -23,7 +23,7 @@ async def status(request: Request):
         examples:
             {"db_up": "true"}
     """
-    async with request.app.pool.acquire() as connection:
+    async with request.app.state.pool.acquire() as connection:
         db_up_result = await check_db_up(connection)
 
     db_up = "true" if db_up_result else "false"

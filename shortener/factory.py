@@ -1,11 +1,12 @@
 import contextlib
 import logging
 import os
-import typing
+from typing import Dict, Any, Callable, AsyncGenerator, cast
 
 import asyncpg
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
+from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Mount
 from starlette.routing import Route
@@ -32,7 +33,7 @@ routes = [
 ]
 
 
-async def server_error(request, exc):
+async def server_error(request: Request, exc: Exception) -> JSONResponse:
     """Handle 500 server errors."""
     error_msg = str(exc) if hasattr(exc, "__str__") else "Internal server error"
     logging.error(f"Server error: {error_msg}")
@@ -42,7 +43,7 @@ async def server_error(request, exc):
     )
 
 
-async def not_found(request, exc):
+async def not_found(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle 404 not found errors."""
     detail = exc.detail if hasattr(exc, "detail") else "Resource not found"
     return JSONResponse(
@@ -51,7 +52,7 @@ async def not_found(request, exc):
     )
 
 
-async def validation_error(request, exc):
+async def validation_error(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle 400 validation errors."""
     detail = exc.detail if hasattr(exc, "detail") else "Validation error"
     return JSONResponse(
@@ -60,14 +61,7 @@ async def validation_error(request, exc):
     )
 
 
-exception_handlers = {
-    HTTPException: server_error,
-    UrlNotFoundException: not_found,
-    UrlValidationError: validation_error
-}
-
-
-async def check_database(pool):
+async def check_database(pool: asyncpg.Pool) -> bool:
     """Verify database connection is working."""
     try:
         async with pool.acquire() as connection:
@@ -81,7 +75,7 @@ async def check_database(pool):
 
 
 @contextlib.asynccontextmanager
-async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
+async def lifespan(app: Starlette) -> AsyncGenerator[None, None]:
     """Application lifespan context manager for startup/shutdown events."""
     # Configure logging
     logging.basicConfig(
@@ -102,7 +96,8 @@ async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
         async_pool = asyncpg.create_pool(**db_settings)
 
         async with async_pool as pool:
-            app.pool = pool
+            # Store pool in app state
+            app.state.pool = pool
 
             # Verify database connection
             if not await check_database(pool):
@@ -111,7 +106,7 @@ async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
                 logging.info("Database connection established")
 
             # Store settings in app state
-            app.settings = app_settings
+            app.state.settings = app_settings
 
             yield
 
@@ -124,9 +119,16 @@ async def lifespan(app: typing.Any) -> typing.AsyncGenerator:
 # Get debug mode from environment with default to False for production safety
 debug_mode = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
 
+# Define exception handlers with proper type annotations
+exception_handlers = {
+    HTTPException: server_error,
+    UrlNotFoundException: not_found,
+    UrlValidationError: validation_error
+}
+
 app = Starlette(
     debug=debug_mode,
     routes=routes,
     lifespan=lifespan,
-    exception_handlers=exception_handlers,
+    exception_handlers=cast(Dict[Any, Callable], exception_handlers),
 )
