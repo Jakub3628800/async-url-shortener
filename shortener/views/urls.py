@@ -61,7 +61,7 @@ def validate_key(key: str, max_length: int = 50) -> bool:
     return bool(key_pattern.match(key))
 
 
-async def get_url(request: Request):
+async def get_url(request: Request) -> JSONResponse:
     """
     summary: Get a short_url and its target from the database.
     parameters:
@@ -101,7 +101,7 @@ async def get_url(request: Request):
     if not validate_key(short_url):
         raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
 
-    async with request.app.pool.acquire() as connection:
+    async with request.app.state.pool.acquire() as connection:
         target_url = await get_url_target(short_url, connection)
         if not target_url:
             raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
@@ -111,7 +111,7 @@ async def get_url(request: Request):
     )
 
 
-async def list_urls(request: Request):
+async def list_urls(request: Request) -> JSONResponse:
     """
     summary: List all short URLs
     responses:
@@ -129,13 +129,13 @@ async def list_urls(request: Request):
                   target_url:
                     type: string
     """
-    async with request.app.pool.acquire() as connection:
+    async with request.app.state.pool.acquire() as connection:
         urls = await get_all_short_urls(connection)
 
     return JSONResponse(content=urls, status_code=200)
 
 
-async def create_url(request: Request):
+async def create_url(request: Request) -> JSONResponse:
     """
     summary: Create a short_url in the database.
     requestBody:
@@ -168,7 +168,7 @@ async def create_url(request: Request):
                 target_url:
                   type: string
             example:
-              {"short_url": "testurl", "target_url": "https://wikipedia.com"}
+              {"short_url": "wkp", "target_url": "https://www.wikipedia.org"}
       400:
         description: Validation error
         content:
@@ -198,8 +198,8 @@ async def create_url(request: Request):
         logging.error(f"Invalid JSON in request: {str(e)}")
         raise UrlValidationError(detail="Invalid JSON in request body")
 
-    short_url = body.get("short_url")
-    target_url = body.get("target_url")
+    short_url = body.get("short_url", "")
+    target_url = body.get("target_url", "")
 
     # Validate inputs
     if not short_url:
@@ -214,15 +214,14 @@ async def create_url(request: Request):
         raise UrlValidationError(detail=f"Invalid target URL format: {target_url}")
 
     # Check URL length
-    max_key_length = getattr(request.app.settings, "max_key_length", 50)
-    max_url_length = getattr(request.app.settings, "max_url_length", 2048)
-
+    max_key_length = getattr(request.app.state.settings, "max_key_length", 50)
+    max_url_length = getattr(request.app.state.settings, "max_url_length", 2048)
     if len(short_url) > max_key_length:
         raise UrlValidationError(detail=f"URL key exceeds maximum length of {max_key_length}")
     if len(target_url) > max_url_length:
         raise UrlValidationError(detail=f"Target URL exceeds maximum length of {max_url_length}")
 
-    async with request.app.pool.acquire() as connection:
+    async with request.app.state.pool.acquire() as connection:
         success = await create_url_target(
             short_url=short_url, target_url=target_url, connection=connection
         )
@@ -241,7 +240,7 @@ async def create_url(request: Request):
     )
 
 
-async def update_url(request: Request):
+async def update_url(request: Request) -> JSONResponse:
     """
     summary: Update a short_url in the database.
     parameters:
@@ -251,7 +250,7 @@ async def update_url(request: Request):
           schema:
             type: string
     requestBody:
-      description: Updated URL data
+      description: New target URL
       required: true
       content:
         application/json:
@@ -262,10 +261,10 @@ async def update_url(request: Request):
             properties:
               target_url:
                 type: string
-                example: https://www.wikipedia.org
+                example: https://www.wikipedia.org/wiki/Python
     responses:
       200:
-        description: URL updated successfully
+        description: Short URL updated successfully
         content:
           application/json:
             schema:
@@ -276,7 +275,7 @@ async def update_url(request: Request):
                 target_url:
                   type: string
             example:
-              {"short_url": "testurl", "target_url": "https://wikipedia.com"}
+              {"short_url": "wkp", "target_url": "https://www.wikipedia.org/wiki/Python"}
       400:
         description: Validation error
         content:
@@ -322,11 +321,11 @@ async def update_url(request: Request):
         raise UrlValidationError(detail=f"Invalid target URL format: {target_url}")
 
     # Check URL length
-    max_url_length = getattr(request.app.settings, "max_url_length", 2048)
+    max_url_length = getattr(request.app.state.settings, "max_url_length", 2048)
     if len(target_url) > max_url_length:
         raise UrlValidationError(detail=f"Target URL exceeds maximum length of {max_url_length}")
 
-    async with request.app.pool.acquire() as connection:
+    async with request.app.state.pool.acquire() as connection:
         success = await update_url_target(
             short_url=short_url, new_target_url=target_url, connection=connection
         )
@@ -339,7 +338,7 @@ async def update_url(request: Request):
     )
 
 
-async def delete_url(request: Request):
+async def delete_url(request: Request) -> JSONResponse:
     """
     summary: Delete a short_url from the database.
     parameters:
@@ -350,7 +349,18 @@ async def delete_url(request: Request):
             type: string
     responses:
       204:
-        description: URL deleted successfully
+        description: Short URL deleted successfully
+      400:
+        description: Validation error
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                error:
+                  type: string
+                detail:
+                  type: string
       404:
         description: URL not found
         content:
@@ -368,7 +378,7 @@ async def delete_url(request: Request):
     if not validate_key(short_url):
         raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
 
-    async with request.app.pool.acquire() as connection:
+    async with request.app.state.pool.acquire() as connection:
         success = await delete_url_target(short_url, connection)
 
         if not success:

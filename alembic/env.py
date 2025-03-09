@@ -4,6 +4,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.engine import Connection
 
 from alembic import context  # type: ignore[attr-defined]
 
@@ -58,7 +59,7 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode using async engine."""
 
-    def run_async_migrations(connection):
+    def run_async_migrations(connection: Connection) -> None:
         context.configure(
             connection=connection,
             target_metadata=target_metadata,
@@ -68,11 +69,16 @@ def run_migrations_online() -> None:
         with context.begin_transaction():
             context.run_migrations()
 
-    async def run_async():
-        settings = PostgresSettings()
+    async def run_async() -> None:
+        # Get database connection parameters from environment
+        db_settings = PostgresSettings()
+
+        # Override sqlalchemy.url in alembic.ini
+        config.set_main_option("sqlalchemy.url", db_settings.postgres_dsn)
+
         connectable = AsyncEngine(
             engine_from_config(
-                {"sqlalchemy.url": settings.postgres_dsn},
+                config.get_section(config.config_ini_section),
                 prefix="sqlalchemy.",
                 poolclass=pool.NullPool,
                 future=True,
@@ -81,6 +87,7 @@ def run_migrations_online() -> None:
 
         async with connectable.connect() as connection:
             await connection.run_sync(run_async_migrations)
+            await connection.commit()
 
     asyncio.run(run_async())
 
