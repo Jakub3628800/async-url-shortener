@@ -5,6 +5,10 @@ on:  # yamllint disable-line rule:truthy
   pull_request:
   push:
     branches: [master]
+  # Optional: Allow manual triggering
+
+env:
+  NO_COMMIT_TO_BRANCH: 1  # Disable the no-commit-to-branch hook in CI
 
 jobs:
   pre-commit:
