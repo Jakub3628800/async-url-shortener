@@ -2,9 +2,8 @@ name: Auto-Update pre-commit Hooks
 
 on:
   schedule:
-    # Runs daily at midnight UTC
-    - cron: "0 0 * * *"
-  workflow_dispatch:  # Optional: Allow manual triggering
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: write
