@@ -47,6 +47,6 @@ repos:
       - id: pip-compile
 
 -   repo: https://github.com/gitleaks/gitleaks
-    rev: v8.23.1
+    rev: v8.24.0
     hooks:
       - id: gitleaks
