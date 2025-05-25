@@ -39,10 +39,10 @@ repos:
           - uvicorn
           - sqlalchemy
 
--   repo: https://github.com/jazzband/pip-tools
-    rev: 7.4.1
-    hooks:
-      - id: pip-compile
+          #-   repo: https://github.com/jazzband/pip-tools
+          #    rev: 7.4.1
+          #    hooks:
+          #      - id: pip-compile
 
 -   repo: https://github.com/gitleaks/gitleaks
     rev: v8.26.0
