@@ -43,7 +43,9 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install dependencies
-      run: pip install -r requirements.txt
+      run: |
+        pip install uv
+        uv pip sync requirements.txt
 
     - name: Test with pytest
       run: pytest --cov=shortener

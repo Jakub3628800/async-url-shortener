@@ -1,7 +1,7 @@
 all: test
 
 docker-compose:
-	docker compose up postgres -d
+	docker-compose up postgres -d
 	sleep 3
 	@if command -v pg_isready > /dev/null; then \
 		echo "Waiting for PostgreSQL to be ready..."; \
@@ -13,18 +13,18 @@ docker-compose:
 
 test: docker-compose
 	.venv/bin/pytest
-	docker compose down
+	docker-compose down
 
 install:
-	pip-sync
+	uv pip sync requirements.txt
 
 upgrade:
-	pip-compile --upgrade
-	pip-sync
+	uv pip compile requirements.in --upgrade -o requirements.txt
+	uv pip sync requirements.txt
 
 run: docker-compose
 	python run_app.py
-	docker compose down
+	docker-compose down
 
 watch: docker-compose
 	find . -type f -name "*.py" | entr -p pytest

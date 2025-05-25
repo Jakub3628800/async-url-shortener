@@ -39,10 +39,15 @@ repos:
           - uvicorn
           - sqlalchemy
 
-          #-   repo: https://github.com/jazzband/pip-tools
-          #    rev: 7.4.1
-          #    hooks:
-          #      - id: pip-compile
+-   repo: local
+    hooks:
+      - id: uv-check
+        name: uv check
+        entry: bash -c "uv pip compile requirements.in -o requirements.txt && git diff --exit-code --quiet requirements.txt"
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: ^requirements\.in$
 
 -   repo: https://github.com/gitleaks/gitleaks
     rev: v8.26.0
