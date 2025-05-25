@@ -17,6 +17,6 @@ requests
 starlette
 uvicorn[standard]
 uvloop
-uv
+uv==0.7.8
 sqlalchemy
 alembic

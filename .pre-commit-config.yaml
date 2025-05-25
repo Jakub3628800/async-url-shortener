@@ -43,11 +43,11 @@ repos:
     hooks:
       - id: uv-check
         name: uv check
-        entry: bash -c "uv pip compile requirements.in -o requirements.txt && git diff --exit-code --quiet requirements.txt"
-        language: system
+        entry: bash -c "uv pip compile requirements.in -o requirements.txt --quiet && git diff --exit-code --quiet requirements.txt"
+        language: python
+        additional_dependencies: ["uv==0.7.8"]
         pass_filenames: false
         always_run: true
-        files: ^requirements\.in$
 
 -   repo: https://github.com/gitleaks/gitleaks
     rev: v8.26.0
