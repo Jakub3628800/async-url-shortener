@@ -12,11 +12,6 @@ authors = [
     {name = "Jakub Kriz"},
 ]
 
-[tool.pip-tools]
-generate_hashes = true
-output-file = "requirements.txt"
-allow-unsafe = true
-
 [tool.pytest.ini_options]
 addopts = "-ra -q -vvv"
 asyncio_mode = "auto"
