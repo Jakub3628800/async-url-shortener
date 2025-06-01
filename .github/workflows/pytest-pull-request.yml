@@ -43,7 +43,9 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install dependencies
-      run: pip install -r requirements.txt
+      run: |
+        pip install uv # This should install uv 0.7.8 as per requirements.txt if it's already updated
+        uv pip sync --system requirements.txt
 
     - name: Test with pytest
       run: pytest --cov=shortener
