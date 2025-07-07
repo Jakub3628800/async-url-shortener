@@ -15,16 +15,31 @@ env:
 
 jobs:
 
-  pytest_with_coverage:
-    # Run pytest, upload coverage to a githubs gist so that badge can display it
+  unit_tests:
+    # Run unit tests with SQLite (fast, no external dependencies)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install uv
+      run: pip install uv
+    - name: Install dependencies
+      run: uv sync --dev
+    - name: Run unit tests
+      run: uv run python -m pytest tests/unit/ -v --cov=shortener
 
+  pytest_with_coverage:
+    # Run integration tests with PostgreSQL
     runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:13
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: pass
+          POSTGRES_USER: localuser
+          POSTGRES_PASSWORD: password123
           POSTGRES_DB: urldatabase
 
         options: >-
@@ -48,11 +63,12 @@ jobs:
     - name: Install dependencies
       run: uv sync --dev
 
-    - name: Test with pytest
-      run: uv run pytest --cov=shortener
+    - name: Run integration tests with PostgreSQL
+      run: uv run python -m pytest tests/integration/ -v --cov=shortener
       env:
+        DB_TYPE: postgresql
         DB_HOST: localhost
         DB_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
         DB_DATABASE: urldatabase
-        DB_USER: postgres
-        DB_PASSWORD: pass
+        DB_USER: localuser
+        DB_PASSWORD: password123
