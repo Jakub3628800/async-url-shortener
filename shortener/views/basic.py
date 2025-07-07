@@ -23,8 +23,8 @@ async def status(request: Request) -> JSONResponse:
         examples:
             {"db_up": "true"}
     """
-    async with request.app.state.pool.acquire() as connection:
-        db_up_result = await check_db_up(connection)
+    async with request.app.state.session_factory() as session:
+        db_up_result = await check_db_up(session)
 
     db_up = "true" if db_up_result else "false"
     return JSONResponse({"db_up": db_up})

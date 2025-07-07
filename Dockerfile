@@ -1,21 +1,17 @@
-FROM ubuntu:24.04
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    DEBIAN_FRONTEND=noninteractive
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    python3.10 \
-    python3-pip \
-    python3-venv \
-    && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir uv
 
 WORKDIR /app
 
-COPY requirements.txt ./
-RUN python3 -m pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --frozen --no-dev
 
 COPY . .
 
-CMD ["python3", "run_app.py"]
+CMD ["uv", "run", "python", "run_app.py"]

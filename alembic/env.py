@@ -8,7 +8,7 @@ from sqlalchemy.engine import Connection
 
 from alembic import context  # type: ignore[attr-defined]
 
-from shortener.settings import PostgresSettings
+from shortener.settings import DatabaseSettings
 from shortener.models import Base
 
 # this is the Alembic Config object, which provides
@@ -71,10 +71,10 @@ def run_migrations_online() -> None:
 
     async def run_async() -> None:
         # Get database connection parameters from environment
-        db_settings = PostgresSettings()
+        db_settings = DatabaseSettings()
 
         # Override sqlalchemy.url in alembic.ini
-        config.set_main_option("sqlalchemy.url", db_settings.postgres_dsn)
+        config.set_main_option("sqlalchemy.url", db_settings.database_url)
 
         connectable = AsyncEngine(
             engine_from_config(

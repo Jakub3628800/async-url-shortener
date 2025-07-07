@@ -1,21 +1,54 @@
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "async-url-shortener"
 description = "Simple async url shortener written using Starlette framework. Mostly a toy project made to experiment with different things such as GitHub actions or python async libraries."
 readme = "README.md"
-requires-python = "== 3.12"
+requires-python = ">=3.12"
 authors = [
     {name = "Jakub Kriz"},
 ]
+version = "1.0.1"
+dependencies = [
+    "aiofiles",
+    "asyncpg",
+    "fastapi",
+    "gunicorn",
+    "httptools",
+    "httpx",
+    "jinja2",
+    "psycopg2-binary",
+    "pydantic",
+    "pydantic-settings",
+    "pyyaml",
+    "requests",
+    "starlette",
+    "uvicorn[standard]",
+    "uvloop",
+    "sqlalchemy",
+    "alembic",
+    "aiosqlite",
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=6.2.1",
+]
 
-[tool.pip-tools]
-generate_hashes = true
-output-file = "requirements.txt"
-allow-unsafe = true
+[project.optional-dependencies]
+dev = [
+    "pip-tools",
+    "pre-commit",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "mypy",
+    "psycopg2-binary",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["shortener"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -q -vvv"

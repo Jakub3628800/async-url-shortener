@@ -3,7 +3,8 @@ import logging
 import os
 from typing import Dict, Any, Callable, AsyncGenerator, cast
 
-import asyncpg
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -13,7 +14,7 @@ from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 
 from shortener.actions import UrlNotFoundException, UrlValidationError
-from shortener.settings import PostgresSettings, AppSettings
+from shortener.settings import DatabaseSettings, AppSettings
 from shortener.views.basic import ping
 from shortener.views.basic import status
 from shortener.views.redirect import redirect_url
@@ -61,11 +62,12 @@ async def validation_error(request: Request, exc: HTTPException) -> JSONResponse
     )
 
 
-async def check_database(pool: asyncpg.Pool) -> bool:
+async def check_database(session_factory: async_sessionmaker[AsyncSession]) -> bool:
     """Verify database connection is working."""
     try:
-        async with pool.acquire() as connection:
-            if not await connection.fetchval("SELECT 1"):
+        async with session_factory() as session:
+            result = await session.execute(text("SELECT 1"))
+            if not result.scalar():
                 logging.error("Database health check failed")
                 return False
         return True
@@ -77,49 +79,51 @@ async def check_database(pool: asyncpg.Pool) -> bool:
 @contextlib.asynccontextmanager
 async def lifespan(app: Starlette) -> AsyncGenerator[None, None]:
     """Application lifespan context manager for startup/shutdown events."""
-    # Configure logging
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
-    # Load settings
-    db_settings = dict(PostgresSettings())
+    db_settings = DatabaseSettings()
     app_settings = AppSettings()
 
-    # Configure SSL if needed
-    if os.getenv("ENV") == "HEROKU" or db_settings.get("ssl"):
-        db_settings["ssl"] = "require"
-
     try:
-        logging.info("Initializing database connection pool")
-        async_pool = asyncpg.create_pool(**db_settings)
+        logging.info(f"Initializing database connection using {db_settings.type}")
 
-        async with async_pool as pool:
-            # Store pool in app state
-            app.state.pool = pool
+        engine = create_async_engine(
+            db_settings.database_url,
+            echo=app_settings.debug,
+            pool_pre_ping=True,
+        )
 
-            # Verify database connection
-            if not await check_database(pool):
-                logging.error("Failed to connect to database")
-            else:
-                logging.info("Database connection established")
+        session_factory = async_sessionmaker(
+            engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
 
-            # Store settings in app state
-            app.state.settings = app_settings
+        app.state.engine = engine
+        app.state.session_factory = session_factory
 
-            yield
+        if not await check_database(session_factory):
+            logging.error("Failed to connect to database")
+        else:
+            logging.info("Database connection established")
 
-        logging.info("Application shutdown, connection pool closed")
+        app.state.settings = app_settings
+
+        yield
+
+        logging.info("Application shutdown, closing database connections")
+        await engine.dispose()
+
     except Exception as e:
         logging.error(f"Error during application startup: {str(e)}")
         raise
 
 
-# Get debug mode from environment with default to False for production safety
 debug_mode = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
 
-# Define exception handlers with proper type annotations
 exception_handlers = {
     HTTPException: server_error,
     UrlNotFoundException: not_found,
