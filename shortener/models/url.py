@@ -3,7 +3,7 @@ from sqlalchemy.sql import func
 
 from ..models import Base
 
-class ShortUrl(Base):  # type: ignore
+class ShortUrl(Base):  # type: ignore[misc,valid-type]
     __tablename__ = 'short_urls'
 
     id = Column(Integer, primary_key=True)

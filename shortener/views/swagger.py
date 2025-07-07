@@ -4,6 +4,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.schemas import SchemaGenerator
 from starlette.templating import Jinja2Templates
+from starlette.templating import _TemplateResponse as TemplateResponse
 
 APP_NAME = "Async URL shortener"
 
@@ -15,7 +16,7 @@ def openapi_schema(request: Request) -> Response:
     return schemas.OpenAPIResponse(request=request)
 
 
-async def swaggerui(request: Request) -> Response:
+async def swaggerui(request: Request) -> TemplateResponse:
     config = {
         "app_name": APP_NAME,
         "dom_id": "#swagger-ui",
@@ -25,10 +26,8 @@ async def swaggerui(request: Request) -> Response:
     }
 
     fields = {
-        # Some fields are used directly in template
         "base_url": "/static",
         "app_name": config.pop("app_name"),
-        # Rest are just serialized into json string for inclusion in the .js file
         "config_json": json.dumps(config),
         "request": request,
     }

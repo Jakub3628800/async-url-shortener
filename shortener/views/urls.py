@@ -35,8 +35,15 @@ def validate_url(url: str, max_length: int = 2048) -> bool:
     # Basic URL validation regex
     url_pattern = re.compile(
         r'^(https?|ftp)://'  # scheme
-        r'([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?'  # domain
-        r'(/[^/\s]*)*$'  # path
+        r'('  # start domain group
+        r'([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?|'  # domain name
+        r'localhost|'  # localhost
+        r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'  # IP address (basic)
+        r')'  # end domain group
+        r'(:\d+)?'  # optional port
+        r'(/[^?\s]*)?'  # optional path
+        r'(\?[^#\s]*)?'  # optional query
+        r'(#[^\s]*)?$'  # optional fragment
     )
 
     return bool(url_pattern.match(url))
@@ -101,8 +108,8 @@ async def get_url(request: Request) -> JSONResponse:
     if not validate_key(short_url):
         raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
 
-    async with request.app.state.pool.acquire() as connection:
-        target_url = await get_url_target(short_url, connection)
+    async with request.app.state.session_factory() as session:
+        target_url = await get_url_target(short_url, session)
         if not target_url:
             raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
 
@@ -129,8 +136,8 @@ async def list_urls(request: Request) -> JSONResponse:
                   target_url:
                     type: string
     """
-    async with request.app.state.pool.acquire() as connection:
-        urls = await get_all_short_urls(connection)
+    async with request.app.state.session_factory() as session:
+        urls = await get_all_short_urls(session)
 
     return JSONResponse(content=urls, status_code=200)
 
@@ -221,9 +228,9 @@ async def create_url(request: Request) -> JSONResponse:
     if len(target_url) > max_url_length:
         raise UrlValidationError(detail=f"Target URL exceeds maximum length of {max_url_length}")
 
-    async with request.app.state.pool.acquire() as connection:
+    async with request.app.state.session_factory() as session:
         success = await create_url_target(
-            short_url=short_url, target_url=target_url, connection=connection
+            short_url=short_url, target_url=target_url, session=session
         )
 
         if not success:
@@ -325,9 +332,9 @@ async def update_url(request: Request) -> JSONResponse:
     if len(target_url) > max_url_length:
         raise UrlValidationError(detail=f"Target URL exceeds maximum length of {max_url_length}")
 
-    async with request.app.state.pool.acquire() as connection:
+    async with request.app.state.session_factory() as session:
         success = await update_url_target(
-            short_url=short_url, new_target_url=target_url, connection=connection
+            short_url=short_url, new_target_url=target_url, session=session
         )
 
         if not success:
@@ -378,8 +385,8 @@ async def delete_url(request: Request) -> JSONResponse:
     if not validate_key(short_url):
         raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
 
-    async with request.app.state.pool.acquire() as connection:
-        success = await delete_url_target(short_url, connection)
+    async with request.app.state.session_factory() as session:
+        success = await delete_url_target(short_url, session)
 
         if not success:
             raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")

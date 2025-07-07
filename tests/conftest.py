@@ -1,78 +1,190 @@
 import os
-from typing import Any, Generator
-from unittest.mock import AsyncMock, MagicMock
+import tempfile
+from typing import Generator
+import asyncio
 
 import psycopg2
 import pytest
 from starlette.testclient import TestClient
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from alembic import command
 from alembic.config import Config
 
 from shortener.factory import app
-from shortener.settings import AppSettings
+from shortener.settings import DatabaseSettings, AppSettings
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an instance of the default event loop for the test session."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+
+@pytest.fixture
+def db_type():
+    """Get database type from environment variable."""
+    return os.getenv("DB_TYPE", "sqlite")
+
+
+@pytest.fixture
+async def sqlite_engine():
+    """Create a SQLite test database engine."""
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
+        db_path = tmp_file.name
+
+    engine = create_async_engine(f"sqlite+aiosqlite:///{db_path}")
+
+    # Create tables
+    async with engine.begin() as conn:
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS short_urls (
+                url_key TEXT PRIMARY KEY,
+                target TEXT NOT NULL
+            )
+        """))
+
+    yield engine
+
+    await engine.dispose()
+    os.unlink(db_path)
+
+
+@pytest.fixture(scope="session")
+async def postgresql_engine():
+    """Create a PostgreSQL test database engine."""
+    db_settings = DatabaseSettings(type="postgresql")
+    engine = create_async_engine(
+        db_settings.database_url,
+        pool_size=5,
+        max_overflow=10,
+        pool_pre_ping=True
+    )
+
+    # Create tables directly (skip alembic for integration tests)
+    async with engine.begin() as conn:
+        await conn.execute(text("DROP TABLE IF EXISTS short_urls CASCADE"))
+        await conn.execute(text("""
+            CREATE TABLE short_urls (
+                url_key VARCHAR(255) PRIMARY KEY,
+                target VARCHAR(2048) NOT NULL
+            )
+        """))
+
+    yield engine
+
+    # Clean up
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(text("DROP TABLE IF EXISTS short_urls CASCADE"))
+    except Exception:
+        pass  # Ignore cleanup errors
+
+    await engine.dispose()
+
+
+@pytest.fixture
+async def db_engine(db_type):
+    """Provide the appropriate database engine based on db_type."""
+    if db_type == "sqlite":
+        # Create SQLite engine inline
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
+            db_path = tmp_file.name
+
+        engine = create_async_engine(f"sqlite+aiosqlite:///{db_path}")
+
+        # Create tables
+        async with engine.begin() as conn:
+            await conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS short_urls (
+                    url_key TEXT PRIMARY KEY,
+                    target TEXT NOT NULL
+                )
+            """))
+
+        yield engine
+
+        await engine.dispose()
+        import os
+        os.unlink(db_path)
+    else:
+        # Create PostgreSQL engine inline
+        db_settings = DatabaseSettings(type="postgresql")
+        engine = create_async_engine(
+            db_settings.database_url,
+            pool_size=5,
+            max_overflow=10,
+            pool_pre_ping=True
+        )
+
+        # Create tables directly (skip alembic for integration tests)
+        async with engine.begin() as conn:
+            await conn.execute(text("DROP TABLE IF EXISTS short_urls CASCADE"))
+            await conn.execute(text("""
+                CREATE TABLE short_urls (
+                    url_key VARCHAR(255) PRIMARY KEY,
+                    target VARCHAR(2048) NOT NULL
+                )
+            """))
+
+        yield engine
+
+        # Clean up
+        try:
+            async with engine.begin() as conn:
+                await conn.execute(text("DROP TABLE IF EXISTS short_urls CASCADE"))
+        except Exception:
+            pass  # Ignore cleanup errors
+
+        await engine.dispose()
+
+
+@pytest.fixture
+async def db_session(db_engine):
+    """Create a database session for testing."""
+    session_factory = async_sessionmaker(db_engine, class_=AsyncSession)
+    async with session_factory() as session:
+        yield session
+
+
+@pytest.fixture
+def mock_app_with_db(db_engine):
+    """Create a test app with real database connection."""
+    session_factory = async_sessionmaker(db_engine, class_=AsyncSession, expire_on_commit=False)
+
+    app.state.engine = db_engine
+    app.state.session_factory = session_factory
+    app.state.settings = AppSettings()
+
+    return app
 
 
 @pytest.fixture(scope="function")
-def test_client(psycopg2_cursor: Any) -> TestClient:
-    """Create a test client with mocked database connections."""
-    # Create app settings
+async def clean_database(db_engine):
+    """Clean database between tests."""
+    yield
+    # Clean up after each test
+    async with db_engine.begin() as conn:
+        await conn.execute(text("DELETE FROM short_urls"))
+
+
+@pytest.fixture(scope="function")
+def test_client(db_engine, clean_database) -> TestClient:
+    """Create a test client with real database connections."""
     app_settings = AppSettings()
-
-    # Create a mock pool
-    mock_pool = MagicMock()
-    mock_connection = AsyncMock()
-
-    # Configure the mock connection to return appropriate values for different queries
-    async def mock_fetchval(query, *args):
-        if "SELECT 1" in query:
-            return 1
-        # For get_url_target, return a valid URL for any key
-        if "SELECT target from short_urls where url_key" in query:
-            return "https://example.com/mocked"
-        return None
-
-    async def mock_fetch(query, *args):
-        if "SELECT url_key, target from short_urls" in query:
-            return [{"url_key": "test1", "target": "https://example.com"}]
-        return []
-
-    async def mock_execute(query, *args):
-        if "DELETE FROM short_urls" in query:
-            return "DELETE 1"
-        if "UPDATE short_urls" in query:
-            return "UPDATE 1"
-        if "INSERT INTO short_urls" in query:
-            return "INSERT 0 1"
-        return "OK"
-
-    # Set up the mock connection methods
-    mock_connection.fetchval.side_effect = mock_fetchval
-    mock_connection.fetch.side_effect = mock_fetch
-    mock_connection.execute.side_effect = mock_execute
-
-    # Configure the mock pool to return the mock connection
-    async def mock_acquire():
-        return mock_connection
-
-    mock_pool.acquire.return_value.__aenter__.side_effect = mock_acquire
+    session_factory = async_sessionmaker(db_engine, class_=AsyncSession, expire_on_commit=False)
 
     # Set up the app state
-    app.state.pool = mock_pool
+    app.state.engine = db_engine
+    app.state.session_factory = session_factory
     app.state.settings = app_settings
 
     # Create the test client
     client = TestClient(app)
-
     return client
-
-
-# @pytest.fixture(scope="session")
-# def docker_compose_test_containers():
-#    compose = DockerCompose("", compose_file_name="docker-compose.yaml", pull=True)
-#    print("Starting docker compose")
-#    with compose:
-#        stdout, stderr = compose.get_logs()
-#        print(stdout)
 
 
 @pytest.fixture(scope="session")
@@ -129,9 +241,15 @@ def alembic_config() -> Config:
 
 
 @pytest.fixture(scope="function")
-def run_migrations(alembic_config: Config) -> None:
-    """Run migrations to head."""
-    command.upgrade(alembic_config, "head")
+def run_migrations() -> None:
+    """Run migrations to head - only used for PostgreSQL integration tests."""
+    # Only run migrations if we're testing against PostgreSQL
+    db_type = os.getenv("DB_TYPE", "postgresql")
+    if db_type.lower() != "postgresql":
+        return
+
+    config = Config("alembic.ini")
+    command.upgrade(config, "head")
 
     # Get database connection parameters from environment variables
     db_port = os.getenv("DB_PORT", 5432)

@@ -1,16 +1,7 @@
 import pytest
-from typing import List, Tuple, Any
+from typing import List, Tuple
 
 from starlette.testclient import TestClient
-
-
-def add_short_url(short_url: str, target_url: str, connection: Any) -> None:
-    """Add a short URL to the database (for documentation purposes)."""
-    connection.execute(
-        "INSERT INTO short_urls (url_key, target) VALUES (%(a)s, %(b)s) on conflict do nothing;",
-        {"a": short_url, "b": target_url},
-    )
-    connection.connection.commit()
 
 
 short_urls: List[Tuple[str, str]] = [
@@ -22,14 +13,17 @@ short_urls: List[Tuple[str, str]] = [
 
 
 @pytest.mark.parametrize("short_url,target", short_urls)
-def test_get_url(test_client: TestClient, short_url: str, target: str, psycopg2_cursor: Any) -> None:
+def test_get_url(test_client: TestClient, short_url: str, target: str) -> None:
     """Test getting a URL."""
-    # Add the URL to the database (for documentation purposes)
-    add_short_url(short_url, target, psycopg2_cursor)
+    # First create the URL
+    create_response = test_client.post("/urls/", json={"short_url": short_url, "target_url": target})
+    assert create_response.status_code == 201
 
-    # The mock is configured to return a successful response
+    # Then retrieve it
     response = test_client.get(f"/urls/{short_url}")
     assert response.status_code == 200
+    assert response.json()["short_url"] == short_url
+    assert response.json()["target_url"] == target
 
 
 def test_create_url(test_client: TestClient) -> None:
@@ -42,24 +36,32 @@ def test_create_url(test_client: TestClient) -> None:
 
 
 @pytest.mark.parametrize("short_url,target", short_urls)
-def test_update_url(test_client: TestClient, short_url: str, target: str, psycopg2_cursor: Any) -> None:
+def test_update_url(test_client: TestClient, short_url: str, target: str) -> None:
     """Test updating a URL."""
-    # Add the URL to the database (for documentation purposes)
-    add_short_url(short_url, target, psycopg2_cursor)
+    # First create the URL
+    create_response = test_client.post("/urls/", json={"short_url": short_url, "target_url": target})
+    assert create_response.status_code == 201
 
-    request_body = {"target_url": "https://example.com/updated"}
-
-    # The mock is configured to return a successful response
+    # Then update it
+    new_target = "https://example.com/updated"
+    request_body = {"target_url": new_target}
     response = test_client.put(f"/urls/{short_url}", json=request_body)
     assert response.status_code == 200
+    assert response.json()["short_url"] == short_url
+    assert response.json()["target_url"] == new_target
 
 
 @pytest.mark.parametrize("short_url,target", short_urls)
-def test_delete_url(test_client: TestClient, short_url: str, target: str, psycopg2_cursor: Any) -> None:
+def test_delete_url(test_client: TestClient, short_url: str, target: str) -> None:
     """Test deleting a URL."""
-    # Add the URL to the database (for documentation purposes)
-    add_short_url(short_url, target, psycopg2_cursor)
+    # First create the URL
+    create_response = test_client.post("/urls/", json={"short_url": short_url, "target_url": target})
+    assert create_response.status_code == 201
 
-    # The mock is configured to return a successful response
+    # Then delete it
     response = test_client.delete(f"/urls/{short_url}")
     assert response.status_code == 204
+
+    # Verify it's gone
+    get_response = test_client.get(f"/urls/{short_url}")
+    assert get_response.status_code == 404

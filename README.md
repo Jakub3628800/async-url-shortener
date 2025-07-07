@@ -10,48 +10,66 @@ A high-performance URL shortener service built with Python's Starlette framework
 - Fast URL shortening using async operations
 - RESTful API endpoints
 - Docker container support
-- PostgreSQL database integration
+- SQLite and PostgreSQL database support
 - Comprehensive test coverage
+
+## Quick Start
+
+### One-Command Docker Run (SQLite)
+```bash
+make docker-build && make docker-run-sqlite
+```
+
+This builds and runs the application with SQLite database in a single command.
 
 ## Run Locally
 
 ### Using Docker (Recommended)
 
+#### With SQLite (simplest setup):
+```bash
+make docker-build
+make docker-run-sqlite
+```
+
+#### With PostgreSQL:
 1. Start PostgreSQL container:
 ```bash
 docker run -d --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:alpine
 ```
 
-2. Pull and run the application container:
+2. Build and run the application:
 ```bash
+make docker-build
 docker run -d \
   --name url-shortener \
   -p 8000:8000 \
-  -e DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/postgres \
-  ghcr.io/jakub3628800/shortener:latest
+  -e DB_TYPE=postgresql \
+  -e DB_HOST=host.docker.internal \
+  -e DB_USER=postgres \
+  -e DB_PASSWORD=postgres \
+  -e DB_DATABASE=postgres \
+  async-url-shortener
 ```
 
 ### Development Setup
 
-1. Create and activate virtual environment:
+1. Install dependencies using uv:
 ```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-2. Install dependencies:
-```bash
-pip install pip-tools
 make install
 ```
 
-3. Set up environment variables:
+2. Set up environment variables:
 ```bash
 cp env.example .env
 ```
 
-4. Run the application:
+3. Run the application:
 ```bash
+# With SQLite (default)
+make run-sqlite
+
+# With PostgreSQL (requires Docker)
 make run
 ```
 
@@ -61,9 +79,19 @@ The API documentation will be available at `http://localhost:8000/docs` when the
 
 ## Testing
 
-Run the test suite:
+Run tests against both SQLite and PostgreSQL:
 ```bash
-make test
+make test-all
+```
+
+Run tests with SQLite only:
+```bash
+make test-sqlite
+```
+
+Run tests with PostgreSQL only:
+```bash
+make test-postgres
 ```
 
 ## Deployment
