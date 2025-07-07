@@ -31,7 +31,25 @@ jobs:
     - name: Run unit tests
       run: uv run python -m pytest tests/unit/ -v --cov=shortener
 
-  pytest_with_coverage:
+  integration_tests_sqlite:
+    # Run integration tests with SQLite (no external dependencies)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install uv
+      run: pip install uv
+    - name: Install dependencies
+      run: uv sync --dev
+    - name: Run integration tests with SQLite
+      run: uv run python -m pytest tests/integration/ -v --cov=shortener
+      env:
+        DB_TYPE: sqlite
+
+  integration_tests_postgres:
     # Run integration tests with PostgreSQL
     runs-on: ubuntu-latest
     services:
@@ -59,10 +77,8 @@ jobs:
         python-version: '3.12'
     - name: Install uv
       run: pip install uv
-
     - name: Install dependencies
       run: uv sync --dev
-
     - name: Run integration tests with PostgreSQL
       run: uv run python -m pytest tests/integration/ -v --cov=shortener
       env:
