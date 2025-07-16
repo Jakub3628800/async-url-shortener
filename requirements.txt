@@ -721,9 +721,9 @@ pytest==8.4.0 \
     #   -r requirements.in
     #   pytest-asyncio
     #   pytest-cov
-pytest-asyncio==0.24.0 \
-    --hash=sha256:a811296ed596b69bf0b6f3dc40f83bcaf341b155a269052d82efa2b25ac7037b \
-    --hash=sha256:d081d828e576d85f875399194281e92bf8a68d60d72d1a2faf2feddb6c46b276
+pytest-asyncio==1.1.0 \
+    --hash=sha256:5fe2d69607b0bd75c656d1211f969cadba035030156745ee09e7d71740e58ecf \
+    --hash=sha256:796aa822981e01b68c12e4827b8697108f7205020f24b5793b3c41555dab68ea
     # via -r requirements.in
 pytest-cov==6.0.0 \
     --hash=sha256:eee6f1b9e61008bd34975a4d5bab25801eb31898b032dd55addc93e96fcaaa35 \
