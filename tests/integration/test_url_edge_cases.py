@@ -1,4 +1,3 @@
-import pytest
 from starlette.testclient import TestClient
 
 
@@ -26,7 +25,7 @@ class TestUrlCreationEdgeCases:
         """Test creating URL with maximum allowed target URL length."""
         long_path = "path/" * 400  # Create a very long but valid path
         target_url = f"https://example.com/{long_path}"[:2048]  # Truncate to max length
-        
+
         response = test_client.post(
             "/urls/",
             json={"short_url": "longurl", "target_url": target_url}
@@ -37,7 +36,7 @@ class TestUrlCreationEdgeCases:
         """Test creating URL with target URL exceeding maximum length."""
         long_path = "a" * 2050  # Exceeds maximum length
         target_url = f"https://example.com/{long_path}"
-        
+
         response = test_client.post(
             "/urls/",
             json={"short_url": "test", "target_url": target_url}
@@ -64,7 +63,7 @@ class TestUrlCreationEdgeCases:
             "test#key",    # hash
             "test?key",    # question mark
         ]
-        
+
         for invalid_key in invalid_keys:
             response = test_client.post(
                 "/urls/",
@@ -99,7 +98,7 @@ class TestUrlCreationEdgeCases:
             "https://192.168.1.1:8443/secure/path",
             "ftp://files.example.com/public/downloads",
         ]
-        
+
         for i, target_url in enumerate(complex_urls):
             response = test_client.post(
                 "/urls/",
@@ -118,7 +117,7 @@ class TestUrlCreationEdgeCases:
             "data:text/html,<script>alert('xss')</script>",
             "https://example .com",  # space in domain
         ]
-        
+
         for i, invalid_url in enumerate(invalid_urls):
             response = test_client.post(
                 "/urls/",
@@ -134,7 +133,7 @@ class TestUrlCreationEdgeCases:
             {"short_url": "test", "target_url": ""},
             {"short_url": "", "target_url": ""},
         ]
-        
+
         for test_case in test_cases:
             response = test_client.post("/urls/", json=test_case)
             assert response.status_code == 400
@@ -146,7 +145,7 @@ class TestUrlCreationEdgeCases:
             {"target_url": "https://example.com"},  # missing short_url
             {},  # missing both
         ]
-        
+
         for test_case in test_cases:
             response = test_client.post("/urls/", json=test_case)
             assert response.status_code == 400
@@ -168,7 +167,7 @@ class TestUrlCreationEdgeCases:
             {"short_url": "test", "target_url": "   "},
             {"short_url": "\t\n", "target_url": "https://example.com"},
         ]
-        
+
         for test_case in test_cases:
             response = test_client.post("/urls/", json=test_case)
             assert response.status_code == 400
@@ -199,7 +198,7 @@ class TestUrlUpdateEdgeCases:
             "/urls/",
             json={"short_url": "update_test", "target_url": "https://example.com"}
         )
-        
+
         # Try to update with invalid target
         response = test_client.put(
             "/urls/update_test",
