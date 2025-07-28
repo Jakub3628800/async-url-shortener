@@ -12,19 +12,19 @@ docker-compose:
 	fi
 
 test: docker-compose
-	.venv/bin/pytest
+	uv run pytest
 	docker compose down
 
 install:
-	pip-sync
+	uv sync --all-extras
 
 upgrade:
-	pip-compile --upgrade
-	pip-sync
+	uv lock --upgrade
+	uv sync --all-extras
 
 run: docker-compose
-	python run_app.py
+	uv run python run_app.py
 	docker compose down
 
 watch: docker-compose
-	find . -type f -name "*.py" | entr -p pytest
+	find . -type f -name "*.py" | entr -p uv run pytest
