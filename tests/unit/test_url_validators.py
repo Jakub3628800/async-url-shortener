@@ -1,4 +1,3 @@
-import pytest
 from shortener.views.urls import validate_url, validate_key
 
 
