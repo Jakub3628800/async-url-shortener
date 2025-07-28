@@ -6,16 +6,27 @@ ENV PYTHONUNBUFFERED=1 \
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    python3.10 \
+    python3.12 \
     python3-pip \
     python3-venv \
+    curl \
     && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 WORKDIR /app
 
-COPY requirements.txt ./
-RUN python3 -m pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
 
+# Install dependencies
+RUN uv sync --frozen --no-install-project
+
+# Copy the rest of the application
 COPY . .
 
-CMD ["python3", "run_app.py"]
+# Install the project
+RUN uv sync --frozen
+
+CMD ["uv", "run", "python", "run_app.py"]
