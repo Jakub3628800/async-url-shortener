@@ -4,17 +4,17 @@
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 version: 2
+enable-beta-ecosystems: true
 updates:
-  - package-ecosystem: "pip" # See documentation for possible values
+  - package-ecosystem: "uv" # Update Python dependencies managed by uv
     directory: "/" # Location of package manifests
     schedule:
-      interval: "daily"
+      interval: "weekly"
     groups:
       dependencies:
         patterns:
           - "*"
 
-  # Example for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
