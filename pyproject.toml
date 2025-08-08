@@ -44,6 +44,9 @@ dev = [
 [tool.hatch.build.targets.wheel]
 packages = ["shortener"]
 
+[project.scripts]
+async-url-shortener = "shortener.app:main"
+
 [tool.pytest.ini_options]
 addopts = "-ra -q -vvv"
 asyncio_mode = "auto"

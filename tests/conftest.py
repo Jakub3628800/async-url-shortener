@@ -8,7 +8,7 @@ from starlette.testclient import TestClient
 from alembic import command
 from alembic.config import Config
 
-from shortener.factory import app
+from shortener.app import app
 from shortener.settings import AppSettings
 
 
