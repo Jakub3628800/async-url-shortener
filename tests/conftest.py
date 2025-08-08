@@ -7,6 +7,7 @@ import pytest
 from starlette.testclient import TestClient
 from alembic import command
 from alembic.config import Config
+from testcontainers.postgres import PostgresContainer
 
 from shortener.app import app
 from shortener.settings import AppSettings
@@ -66,24 +67,45 @@ def test_client(psycopg2_cursor: Any) -> TestClient:
     return client
 
 
-# @pytest.fixture(scope="session")
-# def docker_compose_test_containers():
-#    compose = DockerCompose("", compose_file_name="docker-compose.yaml", pull=True)
-#    print("Starting docker compose")
-#    with compose:
-#        stdout, stderr = compose.get_logs()
-#        print(stdout)
+@pytest.fixture(scope="session")
+def postgres_container():
+    """Create and manage a PostgreSQL container for the test session."""
+    postgres = PostgresContainer(
+        image="postgres:15",
+        username="localuser",
+        password="password123",
+        dbname="urldatabase",
+        port=5432,
+    )
+
+    postgres.start()
+
+    # Wait for the container to be ready
+    import time
+    time.sleep(2)
+
+    # Set environment variables for the connection
+    os.environ["DB_HOST"] = postgres.get_container_host_ip()
+    os.environ["DB_PORT"] = str(postgres.get_exposed_port(5432))
+    os.environ["DB_NAME"] = "urldatabase"
+    os.environ["DB_USER"] = "localuser"
+    os.environ["DB_PASSWORD"] = "password123"
+
+    yield postgres
+
+    # Cleanup
+    postgres.stop()
 
 
 @pytest.fixture(scope="session")
-def psycopg2_connection() -> Generator[psycopg2.extensions.connection, None, None]:
+def psycopg2_connection(postgres_container: PostgresContainer) -> Generator[psycopg2.extensions.connection, None, None]:
     """Create a PostgreSQL connection for tests."""
-    # Get database connection parameters from environment variables
-    db_port = os.getenv("DB_PORT", 5432)
-    db_host = os.getenv("DB_HOST", "localhost")
-    db_name = os.getenv("DB_NAME", "urldatabase")
-    db_user = os.getenv("DB_USER", "localuser")
-    db_password = os.getenv("DB_PASSWORD", "password123")
+    # Get connection details from the container
+    db_host = postgres_container.get_container_host_ip()
+    db_port = postgres_container.get_exposed_port(5432)
+    db_name = "urldatabase"
+    db_user = "localuser"
+    db_password = "password123"
 
     # Create a connection
     conn = psycopg2.connect(
@@ -122,23 +144,30 @@ def psycopg2_cursor(psycopg2_connection: psycopg2.extensions.connection, run_mig
 
 
 @pytest.fixture(scope="function")
-def alembic_config() -> Config:
-    """Get alembic config."""
+def alembic_config(postgres_container: PostgresContainer) -> Config:
+    """Get alembic config with updated database URL."""
     config = Config("alembic.ini")
+
+    # Update the database URL for migrations
+    db_host = postgres_container.get_container_host_ip()
+    db_port = postgres_container.get_exposed_port(5432)
+    db_url = f"postgresql://localuser:password123@{db_host}:{db_port}/urldatabase"
+    config.set_main_option("sqlalchemy.url", db_url)
+
     return config
 
 
 @pytest.fixture(scope="function")
-def run_migrations(alembic_config: Config) -> None:
+def run_migrations(alembic_config: Config, postgres_container: PostgresContainer) -> None:
     """Run migrations to head."""
     command.upgrade(alembic_config, "head")
 
-    # Get database connection parameters from environment variables
-    db_port = os.getenv("DB_PORT", 5432)
-    db_host = os.getenv("DB_HOST", "localhost")
-    db_name = os.getenv("DB_NAME", "urldatabase")
-    db_user = os.getenv("DB_USER", "localuser")
-    db_password = os.getenv("DB_PASSWORD", "password123")
+    # Get database connection parameters from the container
+    db_host = postgres_container.get_container_host_ip()
+    db_port = postgres_container.get_exposed_port(5432)
+    db_name = "urldatabase"
+    db_user = "localuser"
+    db_password = "password123"
 
     # Create a connection for verification
     verification_connection = psycopg2.connect(

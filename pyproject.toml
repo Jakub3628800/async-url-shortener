@@ -39,6 +39,7 @@ dev = [
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
+    "testcontainers[postgres]",
 ]
 
 [tool.hatch.build.targets.wheel]
