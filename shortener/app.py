@@ -1,9 +1,10 @@
 import contextlib
 import logging
 import os
-from typing import Dict, Any, Callable, AsyncGenerator, cast
+from typing import Dict, Any, Callable, AsyncGenerator, Union, cast
 
 import asyncpg
+import uvicorn
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -132,3 +133,12 @@ app = Starlette(
     lifespan=lifespan,
     exception_handlers=cast(Dict[Any, Callable], exception_handlers),
 )
+
+
+def main():
+    port: Union[str, int] = os.getenv("APPLICATION_PORT", 8000)
+    uvicorn.run(app, host="127.0.0.0", port=int(port), loop="uvloop")
+
+
+if __name__ == "__main__":
+    main()
