@@ -1,32 +1,30 @@
-FROM ubuntu:24.04
+# Use the official uv image based on Debian bookworm
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
+# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    DEBIAN_FRONTEND=noninteractive
+    # uv settings
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    python3.12 \
-    python3-pip \
-    python3-venv \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
+# Set working directory
 WORKDIR /app
 
-# Copy dependency files
+# Copy dependency files first for better caching
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies
+# Create virtual environment and install dependencies
 RUN uv sync --frozen --no-install-project
 
 # Copy the rest of the application
 COPY . .
 
-# Install the project
+# Install the project itself
 RUN uv sync --frozen
 
-CMD ["uv", "run", "python", "run_app.py"]
+# Expose the port the app runs on
+EXPOSE 8000
+
+# Run the application using uv
+CMD ["uv", "run", "python", "-m", "shortener.app"]
