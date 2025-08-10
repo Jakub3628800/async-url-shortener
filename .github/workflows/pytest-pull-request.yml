@@ -51,7 +51,7 @@ jobs:
       run: uv run pytest --cov=shortener
       env:
         DB_HOST: localhost
-        DB_PORT: ${{ job.services.postgres.ports[5432] }} # get randomly assigned published port
+        DB_PORT: 5432
         DB_DATABASE: urldatabase
         DB_USER: postgres
         DB_PASSWORD: pass

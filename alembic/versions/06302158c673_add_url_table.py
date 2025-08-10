@@ -5,12 +5,13 @@ Revises: d6f2bb97ceff
 Create Date: 2025-03-01 17:16:00.000000
 
 """
+
 from typing import Sequence, Union
 
 
 # revision identifiers, used by Alembic.
-revision: str = '06302158c673'
-down_revision: Union[str, None] = 'd6f2bb97ceff'
+revision: str = "06302158c673"
+down_revision: Union[str, None] = "d6f2bb97ceff"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -40,26 +40,21 @@ async def server_error(request: Request, exc: Exception) -> JSONResponse:
     error_msg = str(exc) if hasattr(exc, "__str__") else "Internal server error"
     logging.error(f"Server error: {error_msg}")
     return JSONResponse(
-        {"error": "Internal server error", "detail": error_msg},
-        status_code=500
+        {"error": "Internal server error", "detail": error_msg}, status_code=500
     )
 
 
 async def not_found(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle 404 not found errors."""
     detail = exc.detail if hasattr(exc, "detail") else "Resource not found"
-    return JSONResponse(
-        {"error": "Not found", "detail": detail},
-        status_code=404
-    )
+    return JSONResponse({"error": "Not found", "detail": detail}, status_code=404)
 
 
 async def validation_error(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle 400 validation errors."""
     detail = exc.detail if hasattr(exc, "detail") else "Validation error"
     return JSONResponse(
-        {"error": "Validation error", "detail": detail},
-        status_code=400
+        {"error": "Validation error", "detail": detail}, status_code=400
     )
 
 
@@ -83,7 +78,7 @@ async def lifespan(app: Starlette) -> AsyncGenerator[None, None]:
     # Configure logging
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Load settings
@@ -124,7 +119,7 @@ debug_mode = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
 exception_handlers = {
     HTTPException: server_error,
     UrlNotFoundException: not_found,
-    UrlValidationError: validation_error
+    UrlValidationError: validation_error,
 }
 
 app = Starlette(
