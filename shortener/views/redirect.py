@@ -4,6 +4,7 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
 from shortener.actions import get_url_target
+from shortener.database import get_session
 
 
 async def redirect_url(request: Request) -> RedirectResponse:
@@ -22,8 +23,8 @@ async def redirect_url(request: Request) -> RedirectResponse:
     short_url = request.get("path_params", {}).get("short_url")
 
     try:
-        async with request.app.state.pool.acquire() as connection:
-            target_url = await get_url_target(short_url, connection)
+        async with get_session(request.app.state.session_factory) as session:
+            target_url = await get_url_target(short_url, session)
 
         # If valid URL was found, redirect to it
         return RedirectResponse(url=target_url)

@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import psycopg2
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.testclient import TestClient
 from alembic import command
 from alembic.config import Config
@@ -19,46 +20,60 @@ def test_client(psycopg2_cursor: Any) -> TestClient:
     # Create app settings
     app_settings = AppSettings()
 
-    # Create a mock pool
-    mock_pool = MagicMock()
-    mock_connection = AsyncMock()
+    # Create a mock session factory
+    mock_session_factory = MagicMock()
+    mock_session = AsyncMock(spec=AsyncSession)
 
-    # Configure the mock connection to return appropriate values for different queries
-    async def mock_fetchval(query, *args):
-        if "SELECT 1" in query:
-            return 1
-        # For get_url_target, return a valid URL for any key
-        if "SELECT target from short_urls where url_key" in query:
-            return "https://example.com/mocked"
+    # Configure mock behaviors for different queries
+    async def mock_execute(stmt):
+        result = MagicMock()
+
+        # Check the type of statement
+        stmt_str = str(stmt)
+
+        if "SELECT 1" in stmt_str:
+            result.scalar.return_value = 1
+        elif "SELECT short_urls.target" in stmt_str:
+            result.scalar_one_or_none.return_value = "https://example.com/mocked"
+        elif "SELECT short_urls.url_key, short_urls.target" in stmt_str:
+            mock_record = MagicMock()
+            mock_record.url_key = "test1"
+            mock_record.target = "https://example.com"
+            result.all.return_value = [mock_record]
+        elif "DELETE FROM short_urls" in stmt_str:
+            result.rowcount = 1
+        elif "UPDATE short_urls" in stmt_str:
+            result.rowcount = 1
+        elif "INSERT INTO short_urls" in stmt_str:
+            result.rowcount = 1
+        else:
+            result.scalar.return_value = None
+            result.scalar_one_or_none.return_value = None
+            result.all.return_value = []
+            result.rowcount = 0
+
+        return result
+
+    # Configure the mock session
+    mock_session.execute.side_effect = mock_execute
+    mock_session.add = MagicMock()
+    mock_session.flush = AsyncMock()
+    mock_session.commit = AsyncMock()
+    mock_session.rollback = AsyncMock()
+    mock_session.close = AsyncMock()
+
+    # Configure the mock session factory to return the mock session
+    async def mock_session_context(self):
+        return mock_session
+
+    async def mock_session_exit(self, exc_type, exc_val, exc_tb):
         return None
 
-    async def mock_fetch(query, *args):
-        if "SELECT url_key, target from short_urls" in query:
-            return [{"url_key": "test1", "target": "https://example.com"}]
-        return []
-
-    async def mock_execute(query, *args):
-        if "DELETE FROM short_urls" in query:
-            return "DELETE 1"
-        if "UPDATE short_urls" in query:
-            return "UPDATE 1"
-        if "INSERT INTO short_urls" in query:
-            return "INSERT 0 1"
-        return "OK"
-
-    # Set up the mock connection methods
-    mock_connection.fetchval.side_effect = mock_fetchval
-    mock_connection.fetch.side_effect = mock_fetch
-    mock_connection.execute.side_effect = mock_execute
-
-    # Configure the mock pool to return the mock connection
-    async def mock_acquire():
-        return mock_connection
-
-    mock_pool.acquire.return_value.__aenter__.side_effect = mock_acquire
+    mock_session_factory.return_value.__aenter__ = mock_session_context
+    mock_session_factory.return_value.__aexit__ = mock_session_exit
 
     # Set up the app state
-    app.state.pool = mock_pool
+    app.state.session_factory = mock_session_factory
     app.state.settings = app_settings
 
     # Create the test client
