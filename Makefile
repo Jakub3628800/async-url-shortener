@@ -3,12 +3,8 @@ all: test
 test:
 	uv run pytest
 
-install:
-	uv sync --all-extras
-
-upgrade:
+upgrade-deps:
 	uv lock --upgrade
-	uv sync --all-extras
 
 run:
 	docker compose up postgres -d
@@ -16,5 +12,5 @@ run:
 	uv run python -m shortener.app
 	docker compose down
 
-watch:
-	find . -type f -name "*.py" | entr -p uv run pytest
+run-docker:
+	docker compose up

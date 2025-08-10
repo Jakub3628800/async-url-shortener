@@ -2,19 +2,21 @@ services:
   postgres:
     image: 'postgres:13'
     ports:
-      - 5432:5432
+      - ${DB_PORT:-5432}:5432
     environment:
-      POSTGRES_USER: localuser
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: urldatabase
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    env_file:
+      - .env
 
   shortener:
     image: ghcr.io/jakub3628800/shortener:latest
     ports:
-      - 8000:8000
+      - ${APP_PORT:-8000}:8000
     environment:
-      DB_PORT: 5432
       DB_HOST: postgres
-      DB_NAME: urldatabase
-      DB_USER: localuser
-      DB_PASS: password123
+    env_file:
+      - .env
+    depends_on:
+      - postgres

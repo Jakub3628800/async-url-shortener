@@ -9,6 +9,7 @@ class PostgresSettings(BaseSettings):
         "env_prefix": "DB_",
         "env_file": ".env",
         "env_file_encoding": "utf-8",
+        "extra": "ignore",  # Ignore extra fields from .env
     }
 
     host: str = "localhost"
@@ -35,6 +36,7 @@ class AppSettings(BaseSettings):
         "env_prefix": "APP_",
         "env_file": ".env",
         "env_file_encoding": "utf-8",
+        "extra": "ignore",  # Ignore extra fields from .env
     }
 
     debug: bool = False
