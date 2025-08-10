@@ -35,9 +35,9 @@ def validate_url(url: str, max_length: int = 2048) -> bool:
 
     # Basic URL validation regex
     url_pattern = re.compile(
-        r'^(https?|ftp)://'  # scheme
-        r'([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?'  # domain
-        r'(/[^/\s]*)*$'  # path
+        r"^(https?|ftp)://"  # scheme
+        r"([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?"  # domain
+        r"(/[^/\s]*)*$"  # path
     )
 
     return bool(url_pattern.match(url))
@@ -58,7 +58,7 @@ def validate_key(key: str, max_length: int = 50) -> bool:
         return False
 
     # Only allow alphanumeric characters, hyphens and underscores
-    key_pattern = re.compile(r'^[a-zA-Z0-9_-]+$')
+    key_pattern = re.compile(r"^[a-zA-Z0-9_-]+$")
     return bool(key_pattern.match(key))
 
 
@@ -105,7 +105,9 @@ async def get_url(request: Request) -> JSONResponse:
     async with get_session(request.app.state.session_factory) as session:
         target_url = await get_url_target(short_url, session)
         if not target_url:
-            raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"URL with key '{short_url}' not found"
+            )
 
     return JSONResponse(
         content={"short_url": short_url, "target_url": target_url}, status_code=200
@@ -218,9 +220,13 @@ async def create_url(request: Request) -> JSONResponse:
     max_key_length = getattr(request.app.state.settings, "max_key_length", 50)
     max_url_length = getattr(request.app.state.settings, "max_url_length", 2048)
     if len(short_url) > max_key_length:
-        raise UrlValidationError(detail=f"URL key exceeds maximum length of {max_key_length}")
+        raise UrlValidationError(
+            detail=f"URL key exceeds maximum length of {max_key_length}"
+        )
     if len(target_url) > max_url_length:
-        raise UrlValidationError(detail=f"Target URL exceeds maximum length of {max_url_length}")
+        raise UrlValidationError(
+            detail=f"Target URL exceeds maximum length of {max_url_length}"
+        )
 
     async with get_session(request.app.state.session_factory) as session:
         success = await create_url_target(
@@ -231,9 +237,9 @@ async def create_url(request: Request) -> JSONResponse:
             return JSONResponse(
                 content={
                     "error": "Conflict",
-                    "detail": f"URL with key '{short_url}' already exists"
+                    "detail": f"URL with key '{short_url}' already exists",
                 },
-                status_code=409
+                status_code=409,
             )
 
     return JSONResponse(
@@ -324,7 +330,9 @@ async def update_url(request: Request) -> JSONResponse:
     # Check URL length
     max_url_length = getattr(request.app.state.settings, "max_url_length", 2048)
     if len(target_url) > max_url_length:
-        raise UrlValidationError(detail=f"Target URL exceeds maximum length of {max_url_length}")
+        raise UrlValidationError(
+            detail=f"Target URL exceeds maximum length of {max_url_length}"
+        )
 
     async with get_session(request.app.state.session_factory) as session:
         success = await update_url_target(
@@ -332,7 +340,9 @@ async def update_url(request: Request) -> JSONResponse:
         )
 
         if not success:
-            raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"URL with key '{short_url}' not found"
+            )
 
     return JSONResponse(
         content={"short_url": short_url, "target_url": target_url}, status_code=200
@@ -383,7 +393,9 @@ async def delete_url(request: Request) -> JSONResponse:
         success = await delete_url_target(short_url, session)
 
         if not success:
-            raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"URL with key '{short_url}' not found"
+            )
 
     return JSONResponse({}, status_code=204)
 

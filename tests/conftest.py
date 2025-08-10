@@ -97,6 +97,7 @@ def postgres_container():
 
     # Wait for the container to be ready
     import time
+
     time.sleep(2)
 
     # Set environment variables for the connection
@@ -113,7 +114,9 @@ def postgres_container():
 
 
 @pytest.fixture(scope="session")
-def psycopg2_connection(postgres_container: PostgresContainer) -> Generator[psycopg2.extensions.connection, None, None]:
+def psycopg2_connection(
+    postgres_container: PostgresContainer,
+) -> Generator[psycopg2.extensions.connection, None, None]:
     """Create a PostgreSQL connection for tests."""
     # Get connection details from the container
     db_host = postgres_container.get_container_host_ip()
@@ -124,11 +127,7 @@ def psycopg2_connection(postgres_container: PostgresContainer) -> Generator[psyc
 
     # Create a connection
     conn = psycopg2.connect(
-        host=db_host,
-        port=db_port,
-        dbname=db_name,
-        user=db_user,
-        password=db_password
+        host=db_host, port=db_port, dbname=db_name, user=db_user, password=db_password
     )
     conn.autocommit = True
 
@@ -139,7 +138,9 @@ def psycopg2_connection(postgres_container: PostgresContainer) -> Generator[psyc
 
 
 @pytest.fixture(scope="function")
-def psycopg2_cursor(psycopg2_connection: psycopg2.extensions.connection, run_migrations: None) -> Generator[psycopg2.extensions.cursor, None, None]:
+def psycopg2_cursor(
+    psycopg2_connection: psycopg2.extensions.connection, run_migrations: None
+) -> Generator[psycopg2.extensions.cursor, None, None]:
     """Create a PostgreSQL cursor for tests."""
     # Create a cursor
     cursor = psycopg2_connection.cursor()
@@ -173,7 +174,9 @@ def alembic_config(postgres_container: PostgresContainer) -> Config:
 
 
 @pytest.fixture(scope="function")
-def run_migrations(alembic_config: Config, postgres_container: PostgresContainer) -> None:
+def run_migrations(
+    alembic_config: Config, postgres_container: PostgresContainer
+) -> None:
     """Run migrations to head."""
     command.upgrade(alembic_config, "head")
 
@@ -186,17 +189,16 @@ def run_migrations(alembic_config: Config, postgres_container: PostgresContainer
 
     # Create a connection for verification
     verification_connection = psycopg2.connect(
-        dbname=db_name,
-        user=db_user,
-        password=db_password,
-        host=db_host,
-        port=db_port
+        dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port
     )
 
     # Verify tables exist
     with verification_connection.cursor() as cur:
-        cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'short_urls')")
-        if not cur.fetchone()[0]:
+        cur.execute(
+            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'short_urls')"
+        )
+        result = cur.fetchone()
+        if not result or not result[0]:
             raise RuntimeError("Failed to create short_urls table")
 
     # Close verification connection

@@ -31,7 +31,7 @@ jobs:
         id: changes
         run: |
           git add .pre-commit-config.yaml
-          git diff --staged --quiet || echo "changed=true" >> $GITHUB_OUTPUT
+          git diff --staged --quiet || echo "changed=true" >> "$GITHUB_OUTPUT"
 
       - name: Create Pull Request
         if: steps.changes.outputs.changed == 'true'

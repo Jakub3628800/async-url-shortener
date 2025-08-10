@@ -77,7 +77,10 @@ async def get_all_short_urls(session: AsyncSession) -> List[Dict[str, str]]:
         stmt = select(ShortUrl.url_key, ShortUrl.target)
         result = await session.execute(stmt)
         records = result.all()
-        return [{"short_url": record.url_key, "target_url": record.target} for record in records]
+        return [
+            {"short_url": record.url_key, "target_url": record.target}
+            for record in records
+        ]
     except Exception as e:
         logging.error(f"Error retrieving all URLs: {str(e)}")
         raise HTTPException(status_code=500, detail="Error retrieving URLs")

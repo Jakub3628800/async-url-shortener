@@ -76,9 +76,13 @@ def run_migrations_online() -> None:
         # Override sqlalchemy.url in alembic.ini
         config.set_main_option("sqlalchemy.url", db_settings.postgres_dsn)
 
+        config_section = config.get_section(config.config_ini_section)
+        if config_section is None:
+            config_section = {}
+
         connectable = AsyncEngine(
             engine_from_config(
-                config.get_section(config.config_ini_section),
+                config_section,
                 prefix="sqlalchemy.",
                 poolclass=pool.NullPool,
                 future=True,
