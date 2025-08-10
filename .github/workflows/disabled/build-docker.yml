@@ -35,7 +35,7 @@ jobs:
           VERSION="${{ github.ref }}"
           VERSION="${VERSION##*/}"
           # Strip "v" prefix from tag name
-          if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             VERSION="${VERSION#v}"
           fi
           # Use Docker `latest` tag convention
