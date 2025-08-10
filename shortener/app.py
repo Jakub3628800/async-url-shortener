@@ -3,8 +3,8 @@ import logging
 import os
 from typing import Dict, Any, Callable, AsyncGenerator, Union, cast
 
-import asyncpg
 import uvicorn
+from sqlalchemy import select
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -14,6 +14,7 @@ from starlette.routing import Route
 from starlette.staticfiles import StaticFiles
 
 from shortener.actions import UrlNotFoundException, UrlValidationError
+from shortener.database import create_engine, create_session_factory, get_session
 from shortener.settings import PostgresSettings, AppSettings
 from shortener.views.basic import ping
 from shortener.views.basic import status
@@ -62,11 +63,12 @@ async def validation_error(request: Request, exc: HTTPException) -> JSONResponse
     )
 
 
-async def check_database(pool: asyncpg.Pool) -> bool:
+async def check_database(session_factory) -> bool:
     """Verify database connection is working."""
     try:
-        async with pool.acquire() as connection:
-            if not await connection.fetchval("SELECT 1"):
+        async with get_session(session_factory) as session:
+            result = await session.execute(select(1))
+            if not result.scalar():
                 logging.error("Database health check failed")
                 return False
         return True
@@ -85,33 +87,31 @@ async def lifespan(app: Starlette) -> AsyncGenerator[None, None]:
     )
 
     # Load settings
-    db_settings = dict(PostgresSettings())
+    db_settings = PostgresSettings()
     app_settings = AppSettings()
 
-    # Configure SSL if needed
-    if os.getenv("ENV") == "HEROKU" or db_settings.get("ssl"):
-        db_settings["ssl"] = "require"
-
     try:
-        logging.info("Initializing database connection pool")
-        async_pool = asyncpg.create_pool(**db_settings)
+        logging.info("Initializing database engine")
+        engine = create_engine(db_settings)
+        session_factory = create_session_factory(engine)
 
-        async with async_pool as pool:
-            # Store pool in app state
-            app.state.pool = pool
+        # Store session factory in app state
+        app.state.session_factory = session_factory
 
-            # Verify database connection
-            if not await check_database(pool):
-                logging.error("Failed to connect to database")
-            else:
-                logging.info("Database connection established")
+        # Store settings in app state
+        app.state.settings = app_settings
 
-            # Store settings in app state
-            app.state.settings = app_settings
+        # Verify database connection
+        if not await check_database(session_factory):
+            logging.error("Failed to connect to database")
+        else:
+            logging.info("Database connection established")
 
-            yield
+        yield
 
-        logging.info("Application shutdown, connection pool closed")
+        # Cleanup
+        await engine.dispose()
+        logging.info("Application shutdown, database engine disposed")
     except Exception as e:
         logging.error(f"Error during application startup: {str(e)}")
         raise
