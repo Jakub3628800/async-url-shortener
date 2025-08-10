@@ -1,50 +1,128 @@
-default_language_version:
-    python: python3.12
+# ===============================================================================
+# pre-commit-config.yaml created with https://github.com/Jakub3628800/pre-commit-template
+# ===============================================================================
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
+  # =====================
+  # Base hooks
+  # =====================
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-        - id: check-yaml
-        - id: debug-statements
-        - id: check-ast
-        - id: check-executables-have-shebangs
-        - id: check-shebang-scripts-are-executable
-        - id: check-merge-conflict
-        - id: check-symlinks
-        - id: trailing-whitespace
-        - id: detect-private-key
-        - id: end-of-file-fixer
-        - id: fix-encoding-pragma
-          args: [--remove]
+    - id: trailing-whitespace
+      name: Trim trailing whitespace
+    - id: end-of-file-fixer
+      name: Fix end of files
+    - id: check-yaml
+      name: Check YAML
+    - id: check-json
+      name: Check JSON
+    - id: check-toml
+      name: Check TOML
+    - id: check-added-large-files
+      name: Check for added large files
+    - id: check-merge-conflict
+      name: Check for merge conflict strings
+    - id: detect-private-key
+      name: Detect private keys
+    - id: no-commit-to-branch
+      name: Prevent commits to main/master
+      args: [--branch, main, --branch, master]
+    - id: check-case-conflict
+      name: Check for case conflicts
+    - id: check-executables-have-shebangs
+      name: Check executables have shebangs
+    - id: check-ast
+      name: Check Python AST
+    - id: check-builtin-literals
+      name: Check builtin literals
+    - id: check-docstring-first
+      name: Check docstring first
+    - id: debug-statements
+      name: Check for debug statements
 
+  # =====================
+  # Python hooks
+  # =====================
 
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.12.7
-  hooks:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.6
+    hooks:
+    - id: ruff-format
+      name: Format Python code with Ruff
     - id: ruff
-      args: [ --fix ]
+      name: Run Ruff linter and formatter
+      args: [--fix]
 
--   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
     hooks:
-    -   id: mypy
-        exclude: ^tests/
-        args: []
-        additional_dependencies:
-          - pydantic
-          - pydantic-settings
-          - asyncpg
-          - asyncpg-stubs
-          - starlette
-          - uvicorn
-          - sqlalchemy
-
-          #-   repo: https://github.com/jazzband/pip-tools
-          #    rev: 7.4.1
-          #    hooks:
-          #      - id: pip-compile
-
--   repo: https://github.com/gitleaks/gitleaks
-    rev: v8.28.0
+    - id: mypy
+      name: Run MyPy type checker
+      args: [--ignore-missing-imports]
+      additional_dependencies:
+        - aiofiles
+        - alembic
+        - asyncpg
+        - fastapi
+        - gunicorn
+        - httptools
+        - httpx
+        - jinja2
+        - psycopg2-binary
+        - pydantic
+        - pydantic_settings
+        - pyyaml
+        - requests
+        - sqlalchemy
+        - starlette
+        - uvicorn[standard]
+        - uvloop
+        - types-psycopg2
+        - pytest
+        - testcontainers
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.5.11
     hooks:
-      - id: gitleaks
+    - id: uv-lock
+      name: Check uv.lock is up-to-date
+
+  # =====================
+  # Docker hooks
+  # =====================
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+    - id: hadolint-docker
+      name: Lint Dockerfiles with hadolint
+      files: ^Dockerfile.*$
+      types: [dockerfile]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+    - id: check-added-large-files
+      name: Check for large files (Docker builds)
+      args: ['--maxkb=1000']
+
+  # =====================
+  # GitHub Actions hooks
+  # =====================
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.6.27
+    hooks:
+    - id: actionlint
+      name: Lint GitHub Actions workflows
+      description: Lint GitHub Actions workflow files
+      files: '^\.github/workflows/.*\.(yml|yaml)$'
+
+  # =====================
+  # JavaScript/TypeScript hooks
+  # =====================
+
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.3
+    hooks:
+    - id: prettier
+      name: Format JavaScript/TypeScript code with Prettier
+      types: [javascript]
