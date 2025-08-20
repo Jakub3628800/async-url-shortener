@@ -28,6 +28,7 @@ repos:
     - id: no-commit-to-branch
       name: Prevent commits to main/master
       args: [--branch, main, --branch, master]
+      always_run: false
     - id: check-case-conflict
       name: Check for case conflicts
     - id: check-executables-have-shebangs
