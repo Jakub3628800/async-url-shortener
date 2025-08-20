@@ -8,7 +8,7 @@ on:  # yamllint disable-line rule:truthy
   # Optional: Allow manual triggering
 
 env:
-  NO_COMMIT_TO_BRANCH: 1  # Disable the no-commit-to-branch hook in CI
+  SKIP: no-commit-to-branch  # Disable the no-commit-to-branch hook in CI
 
 jobs:
   pre-commit:
