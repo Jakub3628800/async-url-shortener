@@ -30,6 +30,7 @@ dependencies = [
     "uvloop",
     "sqlalchemy",
     "alembic",
+    "pytest>=8.4.1",
 ]
 
 [project.optional-dependencies]
