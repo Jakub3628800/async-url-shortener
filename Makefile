@@ -1,16 +1,15 @@
+export UV_ISOLATED=1
+
 all: test
 
 test:
-	uv run pytest
+	uv run --extra dev pytest
 
-upgrade-deps:
+deps:
 	uv lock --upgrade
 
 run:
 	docker compose up postgres -d
 	sleep 3
-	uv run python -m shortener.app
+	uv run -m shortener.app
 	docker compose down
-
-run-docker:
-	docker compose up
