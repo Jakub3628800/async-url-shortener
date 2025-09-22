@@ -47,7 +47,7 @@ repos:
   # =====================
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.11
+    rev: v0.13.1
     hooks:
     - id: ruff-format
       name: Format Python code with Ruff
@@ -56,7 +56,7 @@ repos:
       args: [--fix]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+    rev: v1.18.2
     hooks:
     - id: mypy
       name: Run MyPy type checker
@@ -83,7 +83,7 @@ repos:
         - pytest
         - testcontainers
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.14
+    rev: 0.8.19
     hooks:
     - id: uv-lock
       name: Check uv.lock is up-to-date
@@ -92,7 +92,7 @@ repos:
   # Docker hooks
   # =====================
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.13.1-beta
+    rev: v2.13.1
     hooks:
     - id: hadolint-docker
       name: Lint Dockerfiles with hadolint
