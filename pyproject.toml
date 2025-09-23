@@ -35,8 +35,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pip-tools",
-    "pre-commit",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
