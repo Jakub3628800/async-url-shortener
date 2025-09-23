@@ -11,7 +11,6 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Mount
 from starlette.routing import Route
-from starlette.staticfiles import StaticFiles
 
 from shortener.actions import UrlNotFoundException, UrlValidationError
 from shortener.database import create_engine, create_session_factory, get_session
@@ -19,19 +18,14 @@ from shortener.settings import PostgresSettings, AppSettings
 from shortener.views.basic import ping
 from shortener.views.basic import status
 from shortener.views.redirect import redirect_url
-from shortener.views.swagger import openapi_schema
-from shortener.views.swagger import swaggerui
 from shortener.views.urls import routes as url_routes
 
 
 routes = [
     Route("/ping", ping),
     Route("/status", status),
-    Route("/_schema", endpoint=openapi_schema, include_in_schema=False),
-    Route("/", endpoint=swaggerui),
     Route("/{short_url:str}", redirect_url),
     Mount("/urls", routes=url_routes),
-    Mount("/static", StaticFiles(directory="static"), name="static"),
 ]
 
 
