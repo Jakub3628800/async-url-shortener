@@ -9,7 +9,6 @@ deps:
 	uv lock --upgrade
 
 run:
-	docker compose up postgres -d
-	sleep 3
+	docker compose up postgres -d --wait
 	uv run -m shortener.app
 	docker compose down
