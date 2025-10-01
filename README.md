@@ -20,28 +20,6 @@ A high-performance URL shortener service built with Python's Starlette framework
 - **Dependency Management**: `pip-tools`, `uv`
 - **Testing**: `pytest`, `pytest-asyncio`, `testcontainers`
 
-## Project Structure
-```
-.
-├── alembic/              # Database migration scripts
-├── shortener/            # Main application source code
-│   ├── views/            # API view handlers
-│   ├── __init__.py
-│   ├── actions.py        # Core business logic
-│   ├── app.py            # Starlette application setup
-│   ├── database.py       # Database connection and session management
-│   ├── models.py         # SQLAlchemy ORM models
-│   └── settings.py       # Application settings management
-├── tests/                # Test suite
-├── Dockerfile            # Container build instructions
-├── Makefile              # Development command shortcuts
-├── README.md             # This file
-├── alembic.ini           # Alembic configuration
-├── compose.yaml          # Docker Compose setup
-├── pyproject.toml        # Project metadata and dependencies
-└── uv.lock               # Pinned dependencies
-```
-
 ## Run Locally
 
 ### Using Docker (Recommended)
