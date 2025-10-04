@@ -34,12 +34,12 @@ async def get_session(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> AsyncGenerator[AsyncSession, None]:
     """Get database session."""
-    async with session_factory() as session:
+    async with session_factory() as session:  # type: ignore[misc]
         try:
-            yield session
-            await session.commit()
+            yield session  # type: ignore[misc]
+            await session.commit()  # type: ignore[misc]
         except Exception:
-            await session.rollback()
+            await session.rollback()  # type: ignore[misc]
             raise
         finally:
-            await session.close()
+            await session.close()  # type: ignore[misc]

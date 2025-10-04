@@ -25,10 +25,13 @@ repos:
       name: Check for merge conflict strings
     - id: detect-private-key
       name: Detect private keys
+    - id: detect-aws-credentials
+      name: Detect AWS credentials
+      args: [--allow-missing-credentials]
     - id: no-commit-to-branch
       name: Prevent commits to main/master
-      args: [--branch, main, --branch, master]
       always_run: false
+      args: [--branch, main, --branch, master]
     - id: check-case-conflict
       name: Check for case conflicts
     - id: check-executables-have-shebangs
@@ -47,41 +50,46 @@ repos:
   # =====================
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.2
+    rev: v0.13.3
     hooks:
     - id: ruff-format
       name: Format Python code with Ruff
+      args: [--line-length=120]
     - id: ruff
       name: Run Ruff linter and formatter
-      args: [--fix]
+      args: [--line-length=120]
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.18.2
+  - repo: https://github.com/facebook/pyrefly-pre-commit
+    rev: 0.0.1
     hooks:
-    - id: mypy
-      name: Run MyPy type checker
-      args: [--ignore-missing-imports]
-      additional_dependencies:
-        - aiofiles
-        - alembic
-        - asyncpg
-        - fastapi
-        - gunicorn
-        - httptools
-        - httpx
-        - jinja2
-        - psycopg2-binary
-        - pydantic
-        - pydantic_settings
-        - pyyaml
-        - requests
-        - sqlalchemy
-        - starlette
-        - uvicorn[standard]
-        - uvloop
-        - types-psycopg2
-        - pytest
-        - testcontainers
+    - id: pyrefly-typecheck-specific-version
+      name: Run Pyrefly type checker
+      pass_filenames: false
+      additional_dependencies: [
+        "pyrefly==0.30.0",
+        "aiofiles",
+        "alembic",
+        "asyncpg",
+        "fastapi",
+        "httptools",
+        "httpx",
+        "jinja2",
+        "psycopg2-binary",
+        "pydantic",
+        "pydantic_settings",
+        "pyyaml",
+        "requests",
+        "rich",
+        "sqlalchemy",
+        "starlette",
+        "testcontainers[postgres]",
+        "tomli",
+        "uvicorn[standard]",
+        "uvloop",
+        "pytest",
+        "pytest-asyncio",
+        "pytest-cov",
+      ]
   - repo: https://github.com/astral-sh/uv-pre-commit
     rev: 0.8.22
     hooks:
@@ -116,14 +124,3 @@ repos:
       name: Lint GitHub Actions workflows
       description: Lint GitHub Actions workflow files
       files: '^\.github/workflows/.*\.(yml|yaml)$'
-
-  # =====================
-  # JavaScript/TypeScript hooks
-  # =====================
-
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v4.0.0-alpha.8
-    hooks:
-    - id: prettier
-      name: Format JavaScript/TypeScript code with Prettier
-      types: [javascript]

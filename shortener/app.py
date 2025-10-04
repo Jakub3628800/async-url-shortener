@@ -33,9 +33,7 @@ async def server_error(request: Request, exc: Exception) -> JSONResponse:
     """Handle 500 server errors."""
     error_msg = str(exc) if hasattr(exc, "__str__") else "Internal server error"
     logging.error(f"Server error: {error_msg}")
-    return JSONResponse(
-        {"error": "Internal server error", "detail": error_msg}, status_code=500
-    )
+    return JSONResponse({"error": "Internal server error", "detail": error_msg}, status_code=500)
 
 
 async def not_found(request: Request, exc: HTTPException) -> JSONResponse:
@@ -47,9 +45,7 @@ async def not_found(request: Request, exc: HTTPException) -> JSONResponse:
 async def validation_error(request: Request, exc: HTTPException) -> JSONResponse:
     """Handle 400 validation errors."""
     detail = exc.detail if hasattr(exc, "detail") else "Validation error"
-    return JSONResponse(
-        {"error": "Validation error", "detail": detail}, status_code=400
-    )
+    return JSONResponse({"error": "Validation error", "detail": detail}, status_code=400)
 
 
 async def check_database(session_factory) -> bool:

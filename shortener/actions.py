@@ -77,18 +77,13 @@ async def get_all_short_urls(session: AsyncSession) -> List[Dict[str, str]]:
         stmt = select(ShortUrl.url_key, ShortUrl.target)
         result = await session.execute(stmt)
         records = result.all()
-        return [
-            {"short_url": record.url_key, "target_url": record.target}
-            for record in records
-        ]
+        return [{"short_url": record.url_key, "target_url": record.target} for record in records]
     except Exception as e:
         logging.error(f"Error retrieving all URLs: {str(e)}")
         raise HTTPException(status_code=500, detail="Error retrieving URLs")
 
 
-async def create_url_target(
-    short_url: str, target_url: str, session: AsyncSession
-) -> bool:
+async def create_url_target(short_url: str, target_url: str, session: AsyncSession) -> bool:
     """
     Create a new short URL mapping.
 
@@ -123,9 +118,7 @@ async def create_url_target(
         raise HTTPException(status_code=500, detail="Error creating URL")
 
 
-async def update_url_target(
-    short_url: str, new_target_url: str, session: AsyncSession
-) -> bool:
+async def update_url_target(short_url: str, new_target_url: str, session: AsyncSession) -> bool:
     """
     Update an existing short URL mapping.
 
@@ -147,11 +140,7 @@ async def update_url_target(
         raise UrlValidationError(detail="Target URL cannot be empty")
 
     try:
-        stmt = (
-            update(ShortUrl)
-            .where(ShortUrl.url_key == short_url)
-            .values(target=new_target_url)
-        )
+        stmt = update(ShortUrl).where(ShortUrl.url_key == short_url).values(target=new_target_url)
         result = await session.execute(stmt)
         await session.flush()
         return result.rowcount > 0
