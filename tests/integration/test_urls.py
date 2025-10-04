@@ -22,9 +22,7 @@ short_urls: List[Tuple[str, str]] = [
 
 
 @pytest.mark.parametrize("short_url,target", short_urls)
-def test_get_url(
-    test_client: TestClient, short_url: str, target: str, psycopg2_cursor: Any
-) -> None:
+def test_get_url(test_client: TestClient, short_url: str, target: str, psycopg2_cursor: Any) -> None:
     """Test getting a URL."""
     # Add the URL to the database (for documentation purposes)
     add_short_url(short_url, target, psycopg2_cursor)
@@ -44,9 +42,7 @@ def test_create_url(test_client: TestClient) -> None:
 
 
 @pytest.mark.parametrize("short_url,target", short_urls)
-def test_update_url(
-    test_client: TestClient, short_url: str, target: str, psycopg2_cursor: Any
-) -> None:
+def test_update_url(test_client: TestClient, short_url: str, target: str, psycopg2_cursor: Any) -> None:
     """Test updating a URL."""
     # Add the URL to the database (for documentation purposes)
     add_short_url(short_url, target, psycopg2_cursor)
@@ -59,9 +55,7 @@ def test_update_url(
 
 
 @pytest.mark.parametrize("short_url,target", short_urls)
-def test_delete_url(
-    test_client: TestClient, short_url: str, target: str, psycopg2_cursor: Any
-) -> None:
+def test_delete_url(test_client: TestClient, short_url: str, target: str, psycopg2_cursor: Any) -> None:
     """Test deleting a URL."""
     # Add the URL to the database (for documentation purposes)
     add_short_url(short_url, target, psycopg2_cursor)
