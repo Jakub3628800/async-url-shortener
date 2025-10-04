@@ -3,6 +3,8 @@ from typing import Any, Generator
 from unittest.mock import AsyncMock, MagicMock
 
 import psycopg2
+import psycopg2.extensions
+import psycopg2.errors
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.testclient import TestClient
@@ -126,9 +128,7 @@ def psycopg2_connection(
     db_password = "password123"
 
     # Create a connection
-    conn = psycopg2.connect(
-        host=db_host, port=db_port, dbname=db_name, user=db_user, password=db_password
-    )
+    conn = psycopg2.connect(host=db_host, port=db_port, dbname=db_name, user=db_user, password=db_password)
     conn.autocommit = True
 
     yield conn
@@ -149,7 +149,7 @@ def psycopg2_cursor(
     try:
         cursor.execute("DELETE FROM short_urls")
         psycopg2_connection.commit()
-    except psycopg2.errors.UndefinedTable:
+    except psycopg2.ProgrammingError:
         # Table doesn't exist yet, that's fine for unit tests
         pass
 
@@ -174,9 +174,7 @@ def alembic_config(postgres_container: PostgresContainer) -> Config:
 
 
 @pytest.fixture(scope="function")
-def run_migrations(
-    alembic_config: Config, postgres_container: PostgresContainer
-) -> None:
+def run_migrations(alembic_config: Config, postgres_container: PostgresContainer) -> None:
     """Run migrations to head."""
     command.upgrade(alembic_config, "head")
 
@@ -194,9 +192,7 @@ def run_migrations(
 
     # Verify tables exist
     with verification_connection.cursor() as cur:
-        cur.execute(
-            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'short_urls')"
-        )
+        cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'short_urls')")
         result = cur.fetchone()
         if not result or not result[0]:
             raise RuntimeError("Failed to create short_urls table")
