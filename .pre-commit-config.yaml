@@ -91,7 +91,7 @@ repos:
         "pytest-cov",
       ]
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.22
+    rev: 0.8.23
     hooks:
     - id: uv-lock
       name: Check uv.lock is up-to-date
