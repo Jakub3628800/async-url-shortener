@@ -28,9 +28,9 @@ repos:
     - id: detect-aws-credentials
       name: Detect AWS credentials
       args: [--allow-missing-credentials]
-    # - id: no-commit-to-branch
-    #   name: Prevent commits to main/master
-    #   args: [--branch, main, --branch, master]
+    - id: no-commit-to-branch
+      name: Prevent commits to main/master
+      args: [--branch, main, --branch, master]
     - id: check-case-conflict
       name: Check for case conflicts
     - id: check-executables-have-shebangs
