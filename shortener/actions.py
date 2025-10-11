@@ -3,6 +3,7 @@ from typing import Dict, List, Any
 
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.exc import IntegrityError
 from starlette.exceptions import HTTPException
 
@@ -141,7 +142,7 @@ async def update_url_target(short_url: str, new_target_url: str, session: AsyncS
 
     try:
         stmt = update(ShortUrl).where(ShortUrl.url_key == short_url).values(target=new_target_url)
-        result = await session.execute(stmt)
+        result: CursorResult = await session.execute(stmt)  # type: ignore[assignment]
         await session.flush()
         return result.rowcount > 0
     except Exception as e:
@@ -169,7 +170,7 @@ async def delete_url_target(short_url: str, session: AsyncSession) -> bool:
 
     try:
         stmt = delete(ShortUrl).where(ShortUrl.url_key == short_url)
-        result = await session.execute(stmt)
+        result: CursorResult = await session.execute(stmt)  # type: ignore[assignment]
         await session.flush()
         return result.rowcount > 0
     except Exception as e:
