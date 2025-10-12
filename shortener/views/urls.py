@@ -19,6 +19,15 @@ from shortener.actions import (
 from shortener.database import get_session
 
 
+# Pre-compile regexes for performance
+URL_PATTERN = re.compile(
+    r"^(https?|ftp)://"  # scheme
+    r"([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?"  # domain
+    r"(/[^/\s]*)*$"  # path
+)
+KEY_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
+
+
 def validate_url(url: str, max_length: int = 2048) -> bool:
     """
     Validate that a URL is properly formatted.
@@ -32,15 +41,7 @@ def validate_url(url: str, max_length: int = 2048) -> bool:
     """
     if not url or len(url) > max_length:
         return False
-
-    # Basic URL validation regex
-    url_pattern = re.compile(
-        r"^(https?|ftp)://"  # scheme
-        r"([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?"  # domain
-        r"(/[^/\s]*)*$"  # path
-    )
-
-    return bool(url_pattern.match(url))
+    return bool(URL_PATTERN.match(url))
 
 
 def validate_key(key: str, max_length: int = 50) -> bool:
@@ -56,10 +57,7 @@ def validate_key(key: str, max_length: int = 50) -> bool:
     """
     if not key or len(key) > max_length:
         return False
-
-    # Only allow alphanumeric characters, hyphens and underscores
-    key_pattern = re.compile(r"^[a-zA-Z0-9_-]+$")
-    return bool(key_pattern.match(key))
+    return bool(KEY_PATTERN.match(key))
 
 
 async def get_url(request: Request) -> JSONResponse:

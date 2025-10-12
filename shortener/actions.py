@@ -10,6 +10,12 @@ from starlette.exceptions import HTTPException
 from shortener.models import ShortUrl
 
 
+def _validate_short_url(short_url: str) -> None:
+    """Raise UrlValidationError if short_url is empty."""
+    if not short_url:
+        raise UrlValidationError(detail="Short URL cannot be empty")
+
+
 class UrlNotFoundException(HTTPException):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         kwargs["status_code"] = 404
@@ -46,8 +52,7 @@ async def get_url_target(short_url: str, session: AsyncSession) -> str:
     Raises:
         UrlNotFoundException: If the short URL doesn't exist
     """
-    if not short_url:
-        raise UrlValidationError(detail="Short URL cannot be empty")
+    _validate_short_url(short_url)
 
     try:
         stmt = select(ShortUrl.target).where(ShortUrl.url_key == short_url)
@@ -100,8 +105,7 @@ async def create_url_target(short_url: str, target_url: str, session: AsyncSessi
         HTTPException: For database errors
         UrlValidationError: For invalid input
     """
-    if not short_url:
-        raise UrlValidationError(detail="Short URL cannot be empty")
+    _validate_short_url(short_url)
     if not target_url:
         raise UrlValidationError(detail="Target URL cannot be empty")
 
@@ -135,8 +139,7 @@ async def update_url_target(short_url: str, new_target_url: str, session: AsyncS
         HTTPException: For database errors
         UrlValidationError: For invalid input
     """
-    if not short_url:
-        raise UrlValidationError(detail="Short URL cannot be empty")
+    _validate_short_url(short_url)
     if not new_target_url:
         raise UrlValidationError(detail="Target URL cannot be empty")
 
@@ -165,8 +168,7 @@ async def delete_url_target(short_url: str, session: AsyncSession) -> bool:
     Raises:
         HTTPException: For database errors
     """
-    if not short_url:
-        raise UrlValidationError(detail="Short URL cannot be empty")
+    _validate_short_url(short_url)
 
     try:
         stmt = delete(ShortUrl).where(ShortUrl.url_key == short_url)
