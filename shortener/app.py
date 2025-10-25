@@ -1,7 +1,7 @@
 import contextlib
 import logging
 import os
-from typing import Dict, Any, Callable, AsyncGenerator, Union, cast
+from typing import AsyncGenerator, Union
 
 import uvicorn
 from sqlalchemy import select
@@ -29,23 +29,21 @@ routes = [
 ]
 
 
-async def server_error(request: Request, exc: Exception) -> JSONResponse:
-    """Handle 500 server errors."""
-    error_msg = str(exc) if hasattr(exc, "__str__") else "Internal server error"
-    logging.error(f"Server error: {error_msg}")
-    return JSONResponse({"error": "Internal server error", "detail": error_msg}, status_code=500)
+def _create_error_handler(error_name: str, status_code: int):
+    """Create an error handler for a specific status code."""
+
+    async def error_handler(request: Request, exc: Exception) -> JSONResponse:
+        detail = getattr(exc, "detail", error_name)
+        if status_code == 500:
+            logging.error(f"Server error: {detail}")
+        return JSONResponse({"error": error_name, "detail": detail}, status_code=status_code)
+
+    return error_handler
 
 
-async def not_found(request: Request, exc: HTTPException) -> JSONResponse:
-    """Handle 404 not found errors."""
-    detail = exc.detail if hasattr(exc, "detail") else "Resource not found"
-    return JSONResponse({"error": "Not found", "detail": detail}, status_code=404)
-
-
-async def validation_error(request: Request, exc: HTTPException) -> JSONResponse:
-    """Handle 400 validation errors."""
-    detail = exc.detail if hasattr(exc, "detail") else "Validation error"
-    return JSONResponse({"error": "Validation error", "detail": detail}, status_code=400)
+server_error = _create_error_handler("Internal server error", 500)
+not_found = _create_error_handler("Not found", 404)
+validation_error = _create_error_handler("Validation error", 400)
 
 
 async def check_database(session_factory) -> bool:
@@ -116,7 +114,7 @@ app = Starlette(
     debug=debug_mode,
     routes=routes,
     lifespan=lifespan,
-    exception_handlers=cast(Dict[Any, Callable], exception_handlers),
+    exception_handlers=exception_handlers,
 )
 
 
