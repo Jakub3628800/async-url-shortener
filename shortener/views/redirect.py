@@ -1,5 +1,3 @@
-import logging
-
 from starlette.requests import Request
 from starlette.responses import RedirectResponse
 
@@ -19,18 +17,14 @@ async def redirect_url(request: Request) -> RedirectResponse:
     responses:
       307:
         description: Redirected to target url.
+      404:
+        description: Short URL not found.
+      400:
+        description: Invalid URL key format.
     """
-    short_url = request.get("path_params", {}).get("short_url")
+    short_url = request.path_params.get("short_url", "")
 
-    try:
-        async with get_session(request.app.state.session_factory) as session:
-            target_url = await get_url_target(short_url, session)
+    async with get_session(request.app.state.session_factory) as session:
+        target_url = await get_url_target(short_url, session)
 
-        # If valid URL was found, redirect to it
-        return RedirectResponse(url=target_url)
-    except Exception as e:
-        # For any error, including 404, log it but still return a redirect
-        # This maintains backward compatibility with tests expecting 307 status
-        logging.error(f"Unexpected error: {str(e)}")
-        # Redirect to a fallback URL or homepage
-        return RedirectResponse(url="/")
+    return RedirectResponse(url=target_url)

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Any
+from typing import Dict, List
 
 from sqlalchemy import select, delete, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,15 +17,17 @@ def _validate_short_url(short_url: str) -> None:
 
 
 class UrlNotFoundException(HTTPException):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs["status_code"] = 404
-        super().__init__(*args, **kwargs)
+    """Exception raised when a URL is not found (404)."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(status_code=404, detail=detail)
 
 
 class UrlValidationError(HTTPException):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        kwargs["status_code"] = 400
-        super().__init__(*args, **kwargs)
+    """Exception raised for invalid URL input (400)."""
+
+    def __init__(self, detail: str) -> None:
+        super().__init__(status_code=400, detail=detail)
 
 
 async def check_db_up(session: AsyncSession) -> bool:

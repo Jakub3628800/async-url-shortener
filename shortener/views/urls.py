@@ -44,6 +44,14 @@ def validate_url(url: str, max_length: int = 2048) -> bool:
     return bool(URL_PATTERN.match(url))
 
 
+def get_and_validate_short_url(request: Request) -> str:
+    """Extract and validate short_url from path parameters."""
+    short_url = request.path_params.get("short_url", "")
+    if not validate_key(short_url):
+        raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
+    return short_url
+
+
 def validate_key(key: str, max_length: int = 50) -> bool:
     """
     Validate that a URL key is properly formatted.
@@ -95,10 +103,7 @@ async def get_url(request: Request) -> JSONResponse:
                 detail:
                   type: string
     """
-    short_url = request.path_params.get("short_url", "")
-
-    if not validate_key(short_url):
-        raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
+    short_url = get_and_validate_short_url(request)
 
     async with get_session(request.app.state.session_factory) as session:
         target_url = await get_url_target(short_url, session)
@@ -198,25 +203,11 @@ async def create_url(request: Request) -> JSONResponse:
     short_url = body.get("short_url", "")
     target_url = body.get("target_url", "")
 
-    # Validate inputs
-    if not short_url:
-        raise UrlValidationError(detail="short_url is required")
-    if not target_url:
-        raise UrlValidationError(detail="target_url is required")
-
-    # Check URL format
+    # Validate URL format and length (validators check for empty values too)
     if not validate_key(short_url):
         raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
     if not validate_url(target_url):
         raise UrlValidationError(detail=f"Invalid target URL format: {target_url}")
-
-    # Check URL length
-    max_key_length = getattr(request.app.state.settings, "max_key_length", 50)
-    max_url_length = getattr(request.app.state.settings, "max_url_length", 2048)
-    if len(short_url) > max_key_length:
-        raise UrlValidationError(detail=f"URL key exceeds maximum length of {max_key_length}")
-    if len(target_url) > max_url_length:
-        raise UrlValidationError(detail=f"Target URL exceeds maximum length of {max_url_length}")
 
     async with get_session(request.app.state.session_factory) as session:
         success = await create_url_target(short_url=short_url, target_url=target_url, session=session)
@@ -292,10 +283,7 @@ async def update_url(request: Request) -> JSONResponse:
                 detail:
                   type: string
     """
-    short_url = request.path_params.get("short_url", "")
-
-    if not validate_key(short_url):
-        raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
+    short_url = get_and_validate_short_url(request)
 
     try:
         body = await request.json()
@@ -362,10 +350,7 @@ async def delete_url(request: Request) -> JSONResponse:
                 detail:
                   type: string
     """
-    short_url = request.path_params.get("short_url", "")
-
-    if not validate_key(short_url):
-        raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
+    short_url = get_and_validate_short_url(request)
 
     async with get_session(request.app.state.session_factory) as session:
         success = await delete_url_target(short_url, session)
