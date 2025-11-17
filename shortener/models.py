@@ -1,17 +1,18 @@
-from sqlalchemy import Column, DateTime, Integer, String
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.sql import func
+"""Database schema definitions for raw SQL queries."""
 
-Base = declarative_base()
+# SQL schema for short_urls table
+CREATE_TABLE_SQL = """
+    CREATE TABLE IF NOT EXISTS short_urls (
+        id SERIAL PRIMARY KEY,
+        url_key VARCHAR(255) UNIQUE NOT NULL,
+        target VARCHAR(2048) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    )
+"""
 
+# Create index on url_key for faster lookups
+CREATE_INDEX_SQL = """
+    CREATE INDEX IF NOT EXISTS idx_short_urls_url_key ON short_urls(url_key)
+"""
 
-class ShortUrl(Base):  # type: ignore
-    __tablename__ = "short_urls"
-
-    id = Column(Integer, primary_key=True)
-    url_key = Column(String, unique=True, nullable=False)
-    target = Column(String, nullable=False)
-    created_at = Column(DateTime, server_default=func.now(), nullable=False)
-
-
-__all__ = ["Base", "ShortUrl"]
+__all__ = ["CREATE_TABLE_SQL", "CREATE_INDEX_SQL"]
