@@ -1,30 +1,30 @@
-"""Endpoints for editing short_url: target mappings."""
+"""All HTTP endpoint handlers for the URL shortener."""
 
 import logging
 import re
+from urllib.parse import urlparse
 
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse
 from starlette.routing import Route
 
 from shortener.actions import (
     UrlValidationError,
+    check_db_up,
     create_url_target,
     delete_url_target,
     get_all_short_urls,
     get_url_target,
     update_url_target,
 )
-from shortener.database import get_session
 
 
-# Pre-compile regexes for performance
-URL_PATTERN = re.compile(
-    r"^(https?|ftp)://"  # scheme
-    r"([a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?"  # domain
-    r"(/[^/\s]*)*$"  # path
-)
+# =============================================================================
+# URL Validation
+# =============================================================================
+
+# Pre-compile regex for key validation
 KEY_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 
@@ -41,15 +41,13 @@ def validate_url(url: str, max_length: int = 2048) -> bool:
     """
     if not url or len(url) > max_length:
         return False
-    return bool(URL_PATTERN.match(url))
 
-
-def get_and_validate_short_url(request: Request) -> str:
-    """Extract and validate short_url from path parameters."""
-    short_url = request.path_params.get("short_url", "")
-    if not validate_key(short_url):
-        raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
-    return short_url
+    try:
+        result = urlparse(url)
+        # Validate scheme and netloc
+        return bool(result.scheme in ("http", "https", "ftp") and result.netloc)
+    except Exception:
+        return False
 
 
 def validate_key(key: str, max_length: int = 50) -> bool:
@@ -66,6 +64,80 @@ def validate_key(key: str, max_length: int = 50) -> bool:
     if not key or len(key) > max_length:
         return False
     return bool(KEY_PATTERN.match(key))
+
+
+def get_and_validate_short_url(request: Request) -> str:
+    """Extract and validate short_url from path parameters."""
+    short_url = request.path_params.get("short_url", "")
+    if not validate_key(short_url):
+        raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
+    return short_url
+
+
+# =============================================================================
+# Basic Endpoints
+# =============================================================================
+
+
+async def ping(request: Request) -> JSONResponse:
+    """
+    summary: Ping Pong
+    responses:
+      200:
+        examples:
+            {"ping": "pong"}
+    """
+    return JSONResponse({"ping": "pong"})
+
+
+async def status(request: Request) -> JSONResponse:
+    """
+    summary: Status request to check service has a connection to the database.
+    responses:
+      200:
+        examples:
+            {"db_up": "true"}
+    """
+    db_up_result = await check_db_up(request.app.state.db)
+    db_up = "true" if db_up_result else "false"
+    return JSONResponse({"db_up": db_up})
+
+
+# =============================================================================
+# Redirect Endpoint
+# =============================================================================
+
+
+async def redirect_url(request: Request) -> RedirectResponse:
+    """
+    summary: Redirect request to a target url.
+    parameters:
+        - name: short_url
+          in: path
+          required: true
+          schema:
+            type : string
+    responses:
+      307:
+        description: Redirected to target url.
+      404:
+        description: Short URL not found.
+      400:
+        description: Invalid URL key format.
+    """
+    short_url = request.path_params.get("short_url", "")
+
+    # Validate before database lookup
+    if not validate_key(short_url):
+        raise UrlValidationError(detail=f"Invalid URL key format: {short_url}")
+
+    target_url = await get_url_target(short_url, request.app.state.db)
+    return RedirectResponse(url=target_url)
+
+
+# =============================================================================
+# URL Management Endpoints (CRUD)
+# =============================================================================
 
 
 async def get_url(request: Request) -> JSONResponse:
@@ -104,11 +176,7 @@ async def get_url(request: Request) -> JSONResponse:
                   type: string
     """
     short_url = get_and_validate_short_url(request)
-
-    async with get_session(request.app.state.session_factory) as session:
-        target_url = await get_url_target(short_url, session)
-        if not target_url:
-            raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
+    target_url = await get_url_target(short_url, request.app.state.db)
 
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)
 
@@ -131,9 +199,7 @@ async def list_urls(request: Request) -> JSONResponse:
                   target_url:
                     type: string
     """
-    async with get_session(request.app.state.session_factory) as session:
-        urls = await get_all_short_urls(session)
-
+    urls = await get_all_short_urls(request.app.state.db)
     return JSONResponse(content=urls, status_code=200)
 
 
@@ -209,17 +275,16 @@ async def create_url(request: Request) -> JSONResponse:
     if not validate_url(target_url):
         raise UrlValidationError(detail=f"Invalid target URL format: {target_url}")
 
-    async with get_session(request.app.state.session_factory) as session:
-        success = await create_url_target(short_url=short_url, target_url=target_url, session=session)
+    success = await create_url_target(short_url=short_url, target_url=target_url, db=request.app.state.db)
 
-        if not success:
-            return JSONResponse(
-                content={
-                    "error": "Conflict",
-                    "detail": f"URL with key '{short_url}' already exists",
-                },
-                status_code=409,
-            )
+    if not success:
+        return JSONResponse(
+            content={
+                "error": "Conflict",
+                "detail": f"URL with key '{short_url}' already exists",
+            },
+            status_code=409,
+        )
 
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=201)
 
@@ -306,11 +371,10 @@ async def update_url(request: Request) -> JSONResponse:
     if len(target_url) > max_url_length:
         raise UrlValidationError(detail=f"Target URL exceeds maximum length of {max_url_length}")
 
-    async with get_session(request.app.state.session_factory) as session:
-        success = await update_url_target(short_url=short_url, new_target_url=target_url, session=session)
+    success = await update_url_target(short_url=short_url, new_target_url=target_url, db=request.app.state.db)
 
-        if not success:
-            raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
+    if not success:
+        raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
 
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)
 
@@ -351,17 +415,20 @@ async def delete_url(request: Request) -> JSONResponse:
                   type: string
     """
     short_url = get_and_validate_short_url(request)
+    success = await delete_url_target(short_url, request.app.state.db)
 
-    async with get_session(request.app.state.session_factory) as session:
-        success = await delete_url_target(short_url, session)
-
-        if not success:
-            raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
+    if not success:
+        raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
 
     return JSONResponse({}, status_code=204)
 
 
-routes = [
+# =============================================================================
+# Routes
+# =============================================================================
+
+# URL management routes
+url_routes = [
     Route("/{short_url}", get_url, methods=["GET"]),
     Route("/", list_urls, methods=["GET"]),
     Route("/", create_url, methods=["POST"]),

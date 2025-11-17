@@ -4,7 +4,6 @@ import os
 from typing import AsyncGenerator, Union
 
 import uvicorn
-from sqlalchemy import select
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -12,13 +11,11 @@ from starlette.responses import JSONResponse
 from starlette.routing import Mount
 from starlette.routing import Route
 
-from shortener.actions import UrlNotFoundException, UrlValidationError
-from shortener.database import create_engine, create_session_factory, get_session
+from shortener.actions import UrlNotFoundException, UrlValidationError, check_db_up
+from shortener.database import Database, get_database
+from shortener.models import CREATE_TABLE_SQL, CREATE_INDEX_SQL
 from shortener.settings import PostgresSettings, AppSettings
-from shortener.views.basic import ping
-from shortener.views.basic import status
-from shortener.views.redirect import redirect_url
-from shortener.views.urls import routes as url_routes
+from shortener.views import ping, status, redirect_url, url_routes
 
 
 routes = [
@@ -46,17 +43,22 @@ not_found = _create_error_handler("Not found", 404)
 validation_error = _create_error_handler("Validation error", 400)
 
 
-async def check_database(session_factory) -> bool:
-    """Verify database connection is working."""
+async def initialize_database(db: Database) -> bool:
+    """Initialize database schema and verify connection."""
     try:
-        async with get_session(session_factory) as session:
-            result = await session.execute(select(1))
-            if not result.scalar():
-                logging.error("Database health check failed")
-                return False
+        # Create table and index
+        async with db.get_connection() as conn:
+            await conn.execute(CREATE_TABLE_SQL)
+            await conn.execute(CREATE_INDEX_SQL)
+        logging.info("Database tables initialized successfully")
+
+        # Verify connection
+        if not await check_db_up(db):
+            logging.error("Database health check failed")
+            return False
         return True
     except Exception as e:
-        logging.error(f"Database health check error: {str(e)}")
+        logging.error(f"Database initialization error: {str(e)}")
         return False
 
 
@@ -74,27 +76,29 @@ async def lifespan(app: Starlette) -> AsyncGenerator[None, None]:
     app_settings = AppSettings()
 
     try:
-        logging.info("Initializing database engine")
-        engine = create_engine(db_settings)
-        session_factory = create_session_factory(engine)
+        logging.info("Initializing database connection")
+        db = get_database(db_settings)
 
-        # Store session factory in app state
-        app.state.session_factory = session_factory
+        # Connect to database
+        await db.connect()
+
+        # Store database in app state
+        app.state.db = db
 
         # Store settings in app state
         app.state.settings = app_settings
 
-        # Verify database connection
-        if not await check_database(session_factory):
-            logging.error("Failed to connect to database")
+        # Initialize schema and verify connection
+        if not await initialize_database(db):
+            logging.error("Failed to initialize database")
         else:
             logging.info("Database connection established")
 
         yield
 
         # Cleanup
-        await engine.dispose()
-        logging.info("Application shutdown, database engine disposed")
+        await db.disconnect()
+        logging.info("Application shutdown, database connection closed")
     except Exception as e:
         logging.error(f"Error during application startup: {str(e)}")
         raise
@@ -120,7 +124,8 @@ app = Starlette(
 
 def main():
     port: Union[str, int] = os.getenv("APPLICATION_PORT", 8000)
-    uvicorn.run(app, host="127.0.0.0", port=int(port), loop="uvloop")
+    host: str = os.getenv("APPLICATION_HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=int(port), loop="uvloop")
 
 
 if __name__ == "__main__":
