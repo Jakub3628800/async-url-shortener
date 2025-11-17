@@ -13,32 +13,19 @@ authors = [
     {name = "Jakub Kriz"},
 ]
 dependencies = [
-    "aiofiles",
-    "asyncpg",
-    "fastapi",
-    "gunicorn",
-    "httptools",
-    "httpx",
-    "jinja2",
-    "psycopg2-binary",
-    "pydantic",
-    "pydantic_settings",
-    "pyyaml",
-    "requests",
+    "psycopg[binary]",
+    "psycopg-pool",
     "starlette",
     "uvicorn[standard]",
-    "uvloop",
-    "sqlalchemy",
-    "alembic",
-    "pytest>=8.4.1",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
+    "pytest>=8.4.1",
     "pytest-asyncio",
     "pytest-cov",
     "testcontainers[postgres]",
+    "httpx",
 ]
 
 [tool.hatch.build.targets.wheel]
