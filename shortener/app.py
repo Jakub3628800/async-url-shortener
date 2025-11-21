@@ -38,6 +38,13 @@ def _create_error_handler(error_name: str, status_code: int):
     return error_handler
 
 
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    """Handle HTTPException with its actual status code."""
+    if exc.status_code >= 500:
+        logging.error(f"Server error: {exc.detail}")
+    return JSONResponse({"error": "Error", "detail": exc.detail}, status_code=exc.status_code)
+
+
 server_error = _create_error_handler("Internal server error", 500)
 not_found = _create_error_handler("Not found", 404)
 validation_error = _create_error_handler("Validation error", 400)
@@ -107,9 +114,9 @@ async def lifespan(app: Starlette) -> AsyncGenerator[None, None]:
 # Get debug mode from environment with default to False for production safety
 debug_mode = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
 
-# Define exception handlers with proper type annotations
-exception_handlers = {
-    HTTPException: server_error,
+# Define exception handlers
+exception_handlers: dict = {
+    HTTPException: http_exception_handler,
     UrlNotFoundException: not_found,
     UrlValidationError: validation_error,
 }
