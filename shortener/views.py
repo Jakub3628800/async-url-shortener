@@ -4,12 +4,12 @@ import logging
 import re
 from urllib.parse import urlparse
 
-from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import JSONResponse, RedirectResponse
+from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import Route
 
 from shortener.actions import (
+    UrlNotFoundException,
     UrlValidationError,
     check_db_up,
     create_url_target,
@@ -374,12 +374,12 @@ async def update_url(request: Request) -> JSONResponse:
     success = await update_url_target(short_url=short_url, new_target_url=target_url, db=request.app.state.db)
 
     if not success:
-        raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
+        raise UrlNotFoundException(detail=f"URL with key '{short_url}' not found")
 
     return JSONResponse(content={"short_url": short_url, "target_url": target_url}, status_code=200)
 
 
-async def delete_url(request: Request) -> JSONResponse:
+async def delete_url(request: Request) -> Response:
     """
     summary: Delete a short_url from the database.
     parameters:
@@ -418,9 +418,9 @@ async def delete_url(request: Request) -> JSONResponse:
     success = await delete_url_target(short_url, request.app.state.db)
 
     if not success:
-        raise HTTPException(status_code=404, detail=f"URL with key '{short_url}' not found")
+        raise UrlNotFoundException(detail=f"URL with key '{short_url}' not found")
 
-    return JSONResponse({}, status_code=204)
+    return Response(status_code=204)
 
 
 # =============================================================================

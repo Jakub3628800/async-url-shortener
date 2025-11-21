@@ -93,7 +93,7 @@ def postgres_container():
     # Set environment variables for the connection
     os.environ["DB_HOST"] = postgres.get_container_host_ip()
     os.environ["DB_PORT"] = str(postgres.get_exposed_port(5432))
-    os.environ["DB_NAME"] = "urldatabase"
+    os.environ["DB_DATABASE"] = "urldatabase"
     os.environ["DB_USER"] = "localuser"
     os.environ["DB_PASSWORD"] = "password123"
 

@@ -2,6 +2,7 @@
 
 import os
 from dataclasses import dataclass
+from urllib.parse import quote_plus
 
 
 def _load_env_file():
@@ -76,7 +77,10 @@ class PostgresSettings:
     def postgres_dsn(self) -> str:
         """Build PostgreSQL connection string for psycopg."""
         ssl_mode = "require" if self.ssl else "prefer"
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}?sslmode={ssl_mode}"
+        # URL-encode user and password to handle special characters
+        user = quote_plus(self.user)
+        password = quote_plus(self.password)
+        return f"postgresql://{user}:{password}@{self.host}:{self.port}/{self.database}?sslmode={ssl_mode}"
 
 
 @dataclass

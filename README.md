@@ -8,7 +8,7 @@ A lean, high-performance URL shortener service built with **Starlette** (pure AS
 ## Features
 
 - 🚀 **Async-first** - Pure async/await throughout with psycopg3
-- 🔧 **Minimal stack** - Only 3 production dependencies
+- 🔧 **Minimal stack** - Only 4 production dependencies
 - 📝 **Raw SQL** - Explicit SQL queries, no ORM overhead
 - 🗄️ **PostgreSQL** - Async connection pooling with psycopg3
 - 🧪 **Well tested** - 17 comprehensive tests
@@ -164,9 +164,10 @@ This project intentionally uses **raw Starlette** and **raw SQL**:
 - No magic, no hidden queries, no unnecessary abstractions
 
 ### Minimal Dependencies
-Only 3 production dependencies (plus their transitive deps):
+Only 4 production dependencies (plus their transitive deps):
 - `starlette` - routing, request/response handling
 - `psycopg[binary]` - PostgreSQL driver with binary libpq
+- `psycopg-pool` - async connection pool for psycopg
 - `uvicorn[standard]` - ASGI server with C extensions
 
 ### Dataclasses Over Pydantic
