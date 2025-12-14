@@ -13,35 +13,13 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v6
+      - uses: Jakub3628800/pre-commit-uv-action@v0.0.1
         with:
-          python-version: "3.14"
-
-      - name: Install pre-commit
-        run: pip install pre-commit
-
-      - name: Update hooks
-        run: pre-commit autoupdate
-
-      - name: Check for changes
-        id: changes
-        run: |
-          git add .pre-commit-config.yaml
-          git diff --staged --quiet || echo "changed=true" >> "$GITHUB_OUTPUT"
-
-      - name: Create Pull Request
-        if: steps.changes.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
-        with:
-          title: "chore: Pre-commit auto-update"
-          body: "Automated update of pre-commit hooks"
-          branch: "pre-commit-autoupdate"
-          base: "master"
-          labels: dependencies,github_actions
-          sign-commits: true
-          assignees: Jakub3628800
-          reviewers: Jakub3628800
+          command: autoupdate
+          pr-title: "chore: Pre-commit auto-update"
+          pr-base: master
+          pr-branch: pre-commit-autoupdate
+          pr-labels: dependencies,github_actions
+          pr-assignees: Jakub3628800
+          pr-reviewers: Jakub3628800
