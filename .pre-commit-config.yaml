@@ -65,7 +65,7 @@ repos:
     - id: pyrefly-check
       name: Run Pyrefly type checker
       additional_dependencies:
-        - httpx
+        - httpx2
         - psycopg[binary]
         - psycopg-pool
         - pytest
