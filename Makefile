@@ -1,5 +1,3 @@
-export UV_ISOLATED=1
-
 all: test
 
 test:

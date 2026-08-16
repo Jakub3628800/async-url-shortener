@@ -42,20 +42,13 @@ git clone https://github.com/Jakub3628800/async-url-shortener.git
 cd async-url-shortener
 ```
 
-2. **Configure environment (optional):**
+2. **Configure the local environment:**
 ```bash
-# Create .env file with your settings (all have sensible defaults)
-cat > .env << EOF
-DB_HOST=localhost
-DB_PORT=5432
-DB_DATABASE=urldatabase
-DB_USER=localuser
-DB_PASSWORD=password123
-DB_SSL=false
-APPLICATION_HOST=0.0.0.0
-APPLICATION_PORT=8000
-EOF
+cp .env.example .env
+# Replace DB_PASSWORD in .env before starting the services.
 ```
+
+The local `.env` file is ignored by Git and excluded from container builds.
 
 3. **Run the application:**
 ```bash
@@ -108,7 +101,7 @@ make un-migrate
 
 ## Configuration
 
-All configuration uses environment variables with sensible defaults:
+Configuration uses environment variables. Database credentials should be supplied through the ignored local `.env` file or the deployment's secret store:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -116,7 +109,7 @@ All configuration uses environment variables with sensible defaults:
 | `DB_PORT` | 5432 | PostgreSQL port |
 | `DB_DATABASE` | urldatabase | Database name |
 | `DB_USER` | localuser | Database user |
-| `DB_PASSWORD` | password123 | Database password |
+| `DB_PASSWORD` | empty | Database password (set explicitly) |
 | `DB_SSL` | false | Enable SSL for DB connection |
 | `DB_MIN_SIZE` | 5 | Connection pool minimum size |
 | `DB_MAX_SIZE` | 25 | Connection pool maximum size |
@@ -164,9 +157,10 @@ This project intentionally uses **raw Starlette** and **raw SQL**:
 - No magic, no hidden queries, no unnecessary abstractions
 
 ### Minimal Dependencies
-Only 3 production dependencies (plus their transitive deps):
+Only 4 production dependencies (plus their transitive deps):
 - `starlette` - routing, request/response handling
 - `psycopg[binary]` - PostgreSQL driver with binary libpq
+- `psycopg-pool` - Async PostgreSQL connection pooling
 - `uvicorn[standard]` - ASGI server with C extensions
 
 ### Dataclasses Over Pydantic
@@ -189,7 +183,7 @@ docker compose up
 
 ### Environment variables in Docker
 ```bash
-docker run -e DB_HOST=postgres -e DB_USER=localuser url-shortener
+docker run --env-file .env -e DB_HOST=postgres url-shortener
 ```
 
 ## Troubleshooting
