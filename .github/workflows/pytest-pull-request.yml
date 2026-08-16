@@ -8,10 +8,8 @@ on:
     branches: [ master, test-gh-action ]
 
 #set environment variables
-env:
-  HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-  APP_NAME: async-url-shortener
-  IMAGE_NAME: shortener
+permissions:
+  contents: read
 
 jobs:
 
@@ -37,13 +35,13 @@ jobs:
           - 5432:5432
 
     steps:
-    - uses: actions/checkout@v7.0.1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
     - name: Set up Python 3.14
-      uses: actions/setup-python@v7
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
       with:
         python-version: '3.14'
     - name: Install uv
-      uses: astral-sh/setup-uv@v8.3.2
+      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
     - name: Install dependencies
       run: uv sync --all-extras
 
