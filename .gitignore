@@ -12,7 +12,10 @@ dist/
 .cache
 .pytest_cache/
 
+.env
 .envrc
+.pi/
+.venv/
 node_modules/
 
 .mypy_cache/
