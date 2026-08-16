@@ -1,13 +1,13 @@
+import asyncio
 import os
 import time
-import asyncio
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
 import psycopg
 import pytest
 from starlette.testclient import TestClient
-from testcontainers.postgres import PostgresContainer
+from testcontainers.community.postgres import PostgresContainer
 
 from shortener.app import app
 from shortener.database import Database
@@ -104,7 +104,9 @@ def postgres_container():
 
 
 @pytest.fixture(scope="session")
-async def db_connection(postgres_container: PostgresContainer) -> AsyncGenerator[psycopg.AsyncConnection, None]:
+async def db_connection(
+    postgres_container: PostgresContainer,
+) -> AsyncGenerator[psycopg.AsyncConnection]:
     """Create a PostgreSQL async connection for tests."""
     db_host = postgres_container.get_container_host_ip()
     db_port = postgres_container.get_exposed_port(5432)
@@ -122,7 +124,7 @@ async def db_connection(postgres_container: PostgresContainer) -> AsyncGenerator
 
 
 @pytest.fixture(scope="function")
-async def db_cleanup(db_connection: psycopg.AsyncConnection) -> AsyncGenerator[None, None]:
+async def db_cleanup(db_connection: psycopg.AsyncConnection) -> AsyncGenerator[None]:
     """Clean up database before and after each test."""
     # Create tables
     await db_connection.execute("""

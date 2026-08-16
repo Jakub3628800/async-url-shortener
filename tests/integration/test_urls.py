@@ -1,10 +1,7 @@
 import pytest
-from typing import List, Tuple
-
 from starlette.testclient import TestClient
 
-
-short_urls: List[Tuple[str, str]] = [
+short_urls: list[tuple[str, str]] = [
     ("test1_short", "https://example.com/test1"),
     ("test2_short", "https://example.com/test2"),
     ("test3_short", "https://example.com/test3"),

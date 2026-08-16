@@ -1,5 +1,6 @@
 """All HTTP endpoint handlers for the URL shortener."""
 
+import json
 import logging
 import re
 from urllib.parse import urlparse
@@ -19,6 +20,7 @@ from shortener.actions import (
     update_url_target,
 )
 
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # URL Validation
@@ -28,7 +30,7 @@ from shortener.actions import (
 KEY_PATTERN = re.compile(r"^[a-zA-Z0-9_-]+$")
 
 
-def validate_url(url: str, max_length: int = 2048) -> bool:
+def validate_url(url: object, max_length: int = 2048) -> bool:
     """
     Validate that a URL is properly formatted.
 
@@ -39,18 +41,22 @@ def validate_url(url: str, max_length: int = 2048) -> bool:
     Returns:
         True if URL is valid, False otherwise
     """
-    if not url or len(url) > max_length:
+    if not isinstance(url, str) or not url or len(url) > max_length:
         return False
 
     try:
         result = urlparse(url)
-        # Validate scheme and netloc
-        return bool(result.scheme in ("http", "https", "ftp") and result.netloc)
-    except Exception:
+        if result.scheme not in ("http", "https") or not result.hostname:
+            return False
+        if result.username is not None or result.password is not None:
+            return False
+        _ = result.port  # Validate the optional port.
+    except ValueError:
         return False
+    return True
 
 
-def validate_key(key: str, max_length: int = 50) -> bool:
+def validate_key(key: object, max_length: int = 50) -> bool:
     """
     Validate that a URL key is properly formatted.
 
@@ -61,7 +67,7 @@ def validate_key(key: str, max_length: int = 50) -> bool:
     Returns:
         True if key is valid, False otherwise
     """
-    if not key or len(key) > max_length:
+    if not isinstance(key, str) or not key or len(key) > max_length:
         return False
     return bool(KEY_PATTERN.match(key))
 
@@ -262,9 +268,11 @@ async def create_url(request: Request) -> JSONResponse:
     """
     try:
         body = await request.json()
-    except Exception as e:
-        logging.error(f"Invalid JSON in request: {str(e)}")
-        raise UrlValidationError(detail="Invalid JSON in request body")
+    except json.JSONDecodeError, UnicodeDecodeError:
+        logger.info("Rejected an invalid JSON request body")
+        raise UrlValidationError(detail="Invalid JSON in request body") from None
+    if not isinstance(body, dict):
+        raise UrlValidationError(detail="Request body must be a JSON object")
 
     short_url = body.get("short_url", "")
     target_url = body.get("target_url", "")
@@ -352,9 +360,11 @@ async def update_url(request: Request) -> JSONResponse:
 
     try:
         body = await request.json()
-    except Exception as e:
-        logging.error(f"Invalid JSON in request: {str(e)}")
-        raise UrlValidationError(detail="Invalid JSON in request body")
+    except json.JSONDecodeError, UnicodeDecodeError:
+        logger.info("Rejected an invalid JSON request body")
+        raise UrlValidationError(detail="Invalid JSON in request body") from None
+    if not isinstance(body, dict):
+        raise UrlValidationError(detail="Request body must be a JSON object")
 
     target_url = body.get("target_url")
 

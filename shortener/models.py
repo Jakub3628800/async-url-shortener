@@ -15,4 +15,4 @@ CREATE_INDEX_SQL = """
     CREATE INDEX IF NOT EXISTS idx_short_urls_url_key ON short_urls(url_key)
 """
 
-__all__ = ["CREATE_TABLE_SQL", "CREATE_INDEX_SQL"]
+__all__ = ["CREATE_INDEX_SQL", "CREATE_TABLE_SQL"]
