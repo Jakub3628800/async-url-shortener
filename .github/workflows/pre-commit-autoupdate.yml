@@ -24,8 +24,13 @@ jobs:
       - name: Install pre-commit
         run: pip install pre-commit
 
-      - name: Update hooks
-        run: pre-commit autoupdate
+      - name: Update stable hooks
+        run: |
+          pre-commit autoupdate --repo https://github.com/pre-commit/pre-commit-hooks
+          pre-commit autoupdate --repo https://github.com/astral-sh/ruff-pre-commit
+          pre-commit autoupdate --repo https://github.com/astral-sh/uv-pre-commit
+          pre-commit autoupdate --repo https://github.com/hadolint/hadolint
+          pre-commit autoupdate --repo https://github.com/rhysd/actionlint
 
       - name: Check for changes
         id: changes
