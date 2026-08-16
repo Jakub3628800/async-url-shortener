@@ -21,11 +21,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=9.1.0",
+    "pytest>=9.1.1",
     "pytest-asyncio",
     "pytest-cov",
     "testcontainers[postgres]",
-    "httpx",
+    "httpx2",
 ]
 
 [tool.hatch.build.targets.wheel]
