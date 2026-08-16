@@ -3,6 +3,8 @@
 import os
 from dataclasses import dataclass
 
+from psycopg.conninfo import make_conninfo
+
 
 def _load_env_file():
     """Load .env file if it exists."""
@@ -48,7 +50,7 @@ class PostgresSettings:
     port: int = 5432
     database: str = "urldatabase"
     user: str = "localuser"
-    password: str = "password123"
+    password: str = ""
     ssl: bool = False
 
     # Connection pool settings
@@ -76,7 +78,14 @@ class PostgresSettings:
     def postgres_dsn(self) -> str:
         """Build PostgreSQL connection string for psycopg."""
         ssl_mode = "require" if self.ssl else "prefer"
-        return f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}?sslmode={ssl_mode}"
+        return make_conninfo(
+            host=self.host,
+            port=self.port,
+            dbname=self.database,
+            user=self.user,
+            password=self.password,
+            sslmode=ssl_mode,
+        )
 
 
 @dataclass
