@@ -1,11 +1,11 @@
 """Database configuration using psycopg3 connection pool."""
 
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from psycopg import AsyncConnection
-from psycopg_pool import AsyncConnectionPool
 from psycopg.rows import dict_row
+from psycopg_pool import AsyncConnectionPool
 
 from shortener.settings import PostgresSettings
 
@@ -34,7 +34,7 @@ class Database:
             await self.pool.close()  # type: ignore[union-attr]
 
     @asynccontextmanager
-    async def get_connection(self) -> AsyncGenerator[AsyncConnection, None]:
+    async def get_connection(self) -> AsyncGenerator[AsyncConnection]:
         """Get a connection from the pool."""
         if not self.pool:
             raise RuntimeError("Database not connected. Call connect() first.")

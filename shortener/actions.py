@@ -1,13 +1,14 @@
 """Business logic and database operations using raw SQL."""
 
 import logging
-from typing import Dict, List
 
 import psycopg
 from psycopg import errors as psycopg_errors
 from starlette.exceptions import HTTPException
 
 from shortener.database import Database
+
+logger = logging.getLogger(__name__)
 
 
 class UrlNotFoundException(HTTPException):
@@ -35,11 +36,8 @@ async def check_db_up(db: Database) -> bool:
     try:
         await db.execute_one("SELECT 1")
         return True
-    except (psycopg.OperationalError, psycopg.DatabaseError) as e:
-        logging.error(f"Database connection error: {str(e)}")
-        return False
-    except Exception as e:
-        logging.error(f"Unexpected error during database health check: {str(e)}")
+    except psycopg.DatabaseError:
+        logger.error("Database health check failed")
         return False
 
 
@@ -67,15 +65,12 @@ async def get_url_target(short_url: str, db: Database) -> str:
         return result[0]
     except UrlNotFoundException:
         raise
-    except (psycopg.OperationalError, psycopg.DatabaseError) as e:
-        logging.error(f"Database error when retrieving URL: {str(e)}")
-        raise HTTPException(status_code=503, detail="Database unavailable")
-    except Exception as e:
-        logging.error(f"Unexpected error when retrieving URL: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+    except psycopg.DatabaseError:
+        logger.error("Database query failed while retrieving a URL")
+        raise HTTPException(status_code=503, detail="Database unavailable") from None
 
 
-async def get_all_short_urls(db: Database) -> List[Dict[str, str]]:
+async def get_all_short_urls(db: Database) -> list[dict[str, str]]:
     """
     Get all short URLs and their targets.
 
@@ -88,12 +83,9 @@ async def get_all_short_urls(db: Database) -> List[Dict[str, str]]:
     try:
         results = await db.execute_all("SELECT url_key, target FROM short_urls ORDER BY created_at DESC")
         return [{"short_url": row[0], "target_url": row[1]} for row in results]
-    except (psycopg.OperationalError, psycopg.DatabaseError) as e:
-        logging.error(f"Database error retrieving all URLs: {str(e)}")
-        raise HTTPException(status_code=503, detail="Database unavailable")
-    except Exception as e:
-        logging.error(f"Unexpected error retrieving all URLs: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error retrieving URLs")
+    except psycopg.DatabaseError:
+        logger.error("Database query failed while listing URLs")
+        raise HTTPException(status_code=503, detail="Database unavailable") from None
 
 
 async def create_url_target(short_url: str, target_url: str, db: Database) -> bool:
@@ -126,12 +118,9 @@ async def create_url_target(short_url: str, target_url: str, db: Database) -> bo
     except psycopg_errors.UniqueViolation:
         # URL key already exists
         return False
-    except (psycopg.OperationalError, psycopg.DatabaseError) as e:
-        logging.error(f"Database error creating URL: {str(e)}")
-        raise HTTPException(status_code=503, detail="Database unavailable")
-    except Exception as e:
-        logging.error(f"Unexpected error creating URL: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error creating URL")
+    except psycopg.DatabaseError:
+        logger.error("Database query failed while creating a URL")
+        raise HTTPException(status_code=503, detail="Database unavailable") from None
 
 
 async def update_url_target(short_url: str, new_target_url: str, db: Database) -> bool:
@@ -161,12 +150,9 @@ async def update_url_target(short_url: str, new_target_url: str, db: Database) -
                 (new_target_url, short_url),  # type: ignore[arg-type]
             )
             return result.rowcount > 0
-    except (psycopg.OperationalError, psycopg.DatabaseError) as e:
-        logging.error(f"Database error updating URL: {str(e)}")
-        raise HTTPException(status_code=503, detail="Database unavailable")
-    except Exception as e:
-        logging.error(f"Unexpected error updating URL: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error updating URL")
+    except psycopg.DatabaseError:
+        logger.error("Database query failed while updating a URL")
+        raise HTTPException(status_code=503, detail="Database unavailable") from None
 
 
 async def delete_url_target(short_url: str, db: Database) -> bool:
@@ -192,9 +178,6 @@ async def delete_url_target(short_url: str, db: Database) -> bool:
                 (short_url,),  # type: ignore[arg-type]
             )
             return result.rowcount > 0
-    except (psycopg.OperationalError, psycopg.DatabaseError) as e:
-        logging.error(f"Database error deleting URL: {str(e)}")
-        raise HTTPException(status_code=503, detail="Database unavailable")
-    except Exception as e:
-        logging.error(f"Unexpected error deleting URL: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error deleting URL")
+    except psycopg.DatabaseError:
+        logger.error("Database query failed while deleting a URL")
+        raise HTTPException(status_code=503, detail="Database unavailable") from None
